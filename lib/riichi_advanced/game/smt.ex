@@ -223,8 +223,7 @@ defmodule RiichiAdvanced.SMT do
     |> Enum.frequencies()
     |> Enum.reduce([0, 0, 0, 0, 0, 0, 0, 0, 0], fn {ix, freq}, acc -> List.replace_at(acc, ix, freq) end)
     |> Enum.reverse()
-    |> Enum.map(&Integer.to_string/1)
-    |> Enum.join()
+    |> Enum.map_join(&Integer.to_string/1)
   end
 
   def add_missing_suit(sets) do
@@ -243,8 +242,7 @@ defmodule RiichiAdvanced.SMT do
     |> Enum.group_by(fn i -> trunc(i / 10) end)
     |> add_missing_suit()
     |> Enum.sort_by(fn {k, _v} -> -k end)
-    |> Enum.map(fn {_k, v} -> set_suit_to_bitvector(Enum.map(v, &rem(&1, 10))) end)
-    |> Enum.join()
+    |> Enum.map_join(fn {_k, v} -> set_suit_to_bitvector(Enum.map(v, &rem(&1, 10))) end)
     |> String.pad_leading(Integer.floor_div(len, 4), "0")
     |> then(&"#x" <> &1)
   end
@@ -622,7 +620,6 @@ defmodule RiichiAdvanced.SMT do
     optimzation_call_jokers = for {call, i} <- calls, {_tile, ix} <- Enum.with_index(call), length(hand)+i*3+ix in joker_ixs do
       call = {"", Enum.map(call, &{&1, false})} # TODO replace this dumb call format
       tile = Utils.get_joker_meld_tile(call, jokers)
-      IO.inspect(tile)
       "(assert (= joker#{length(hand)+i*3+ix} #{to_smt_tile(tile, encoding)}))\n"
     end |> Enum.join()
 

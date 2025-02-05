@@ -307,24 +307,97 @@ This is the seven pairs check. Although you can check for six pairs via the simp
 
 This is the kokushi check and introduces the `unique` flag. `unique` is useful when you want to ensure that each group specified in the group list `["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","5z","6z","7z"]` is taken _at most once_ over the course of taking out twelve of them. (I say "group", but each group consists of one tile, which is a valid definition of a group.) This check removes 12 unique terminal/honors plus one more, and if it can do that, the match succeeds and you are tenpai for kokushi.
 
-That's about it for match specifications.
+Here is the full list of allowed items in a group:
+
+- keywords
+  + `"nojoker"` specifies that every item after it cannot use jokers
+  + `"unique"` specifies that every item in this group is taken at most once (if the group is to be taken >1 times)
+- Tiles like `"1m"` and `"9p"`
+- `"any"`, to represent any tile
+- Sets of tiles/offsets like `["1m", "2m", "3m"]` or `[0, 1, 2]`
+
+Offsets are one of the following:
+
+- Integers like `[0, 1, 2]`, representing "some tile" together with the two in sequence after that tile. Although negative integers technically work, it's not really useful (since you can always shift each integer so that the least offset is `0`).
+- Exact tiles like `"1m"` and `"9p"` and `"any"`
+- Fixed offsets like `1A` and `2B`. The set `["1A", "2B", "3C"]` represents any 1 tile of some suit, a 2 tile of another suit, and a 3 tile of a third suit. You may also specify `DA`, `DB`, `DC` as well (where red dragon is manzu suit, green dragon is souzu suit, and white dragon is pinzu suit) -- this is mostly used internally to represent American mahjong hands (see below section).
+
+## American hand match specifications
+
+American hands are a special case since they're so specific. They can be implemented using the above syntax, but there is a shorthand specifically for these kinds of hands (which are then translated to the above syntax behind-the-scenes).
+
+An American match specification is a string instead of an array. An example is `"FF 2024a 2222b 2222c"`. The idea is that we have space-separated groups where the individual characters represent the following:
+
+- `F`: any flower
+- `D`: any dragon
+- `W`: any wind
+- `N`,`E`,`W`,`S`: north/east/west/south wind
+- `R`,`G`,`0`: red/green/white dragon
+- `1` to `9`: a number tile
+- `X`: a variable number tile
+
+`X` groups must be suffixed with a number. For instance, `"XXXXX0a XX1a XXXXX2a"` matches a quint of some number, a pair of that number + 1, and a quint of that number + 2.
+
+The `a` at the end is a suit specifier, required for groups consisting of `1` to `9`, `D`, and/or `X`. The three suit specifiers are `a`, `b`, `c`. For example, `"2024a 2222b 2222c"` matches 2024 of one suit (0 is white dragon), 2222 or another suit, and 2222 of a third suit.
+
+See `rulesets/american.json` for more examples.
+
+## Marking
+
+Riichi Advanced has a mechanism that allows for marking arbitrary tiles for use in another action. The most notable use of this is to implement charleston passes, where a player marks three tiles to pass. The Sakicards variant makes heavy use of marking in order to implement tile swaps and discard pile interactions and other shennanigans.
+
+To trigger a mark action, simply run the action `["mark", mark_spec]` where `mark_spec` is an array of items in the following format:
+
+    [target, number, restrictions]
+
+Examples:
+
+- `["mark", [["hand", 3, ["self", "not_joker"]]]]`: Mark 3 tiles in your own hand (that are not jokers).
+- `["mark", [["hand", 1, ["terminal_honor"]], ["discard", 1, ["last_discard"]]]]`: Mark a terminal/honor in hand and the last discard.
+- `["mark", [["hand", 1, ["match_suit", "not_riichi"]], ["discard", 1, ["match_suit"]]]]`: Mark one tile in your own hand, then mark one tile in your discards. Once you mark one tile, the other tile must match the suit of the marked tile. In addition, the tile in hand can only be your drawn tile, if you are in riichi.
+
+The mark action only prompts the user to mark tiles -- it doesn't do anything with them. Once all tiles are marked, the remaining actions are triggered, and there are certain actions that interact with the marked tiles. These three are the most important:
+
+- `["move_tiles", src, dst]`: Move tiles from `src` to `dst`.
+- `["swap_tiles", src, dst]`: Swap tiles between `src` and `dst`.
+- `["clear_marking"]`: Exit marking mode. This is required after you're done with `move_tiles` or `swap_tiles`, since marking mode essentially pauses the game.
+
+There are a number of ad-hoc actions that also interact with the marked tiles, but they are not meant to be used beyond Sakicards (since they are very specific actions, and the plan is to replace them in the future). For example:
+
+- `["flip_marked_discard_facedown"]`. Flips marked discard tiles facedown. This exits marking mode.
+
+You can reference these actions in the full actions list below.
+
+One final note: the `mark` action also takes two optional action lists to be run before and after marking:
+
+    ["mark", mark_spec, pre_actions, post_actions]
+
+These are just extra hooks to run actions (for example, maybe you want to draw tiles immediately before marking) but are basically not necessary unless you are marking after a delay or something.
+
+---
 
 # `ruleset.json` full documentation
 
 Here are all the toplevel keys. Every key is optional.
 
-Events
-
+- `after_bloody_end`: Triggers after processing the end of a bloody end game (after `after_win`)
 - `after_call`: Triggers at the end of any call. Context: `seat` is the caller's seat, `caller` is the caller's seat, `callee` is the seat called from, and `call` contains call information.
+- `after_charleston`: Triggers after a round of `charleston_*` actions is triggered.
+- `after_discard_passed`: Triggered by the `check_discard_passed` action but only if the last discard had passed.
 - `after_draw`: Triggers at the end of any draw. Context: `seat` is the drawing player's seat.
 - `after_saki_start`: Triggers after all players have drafted their saki cards in the sakicards gamemode. This is only here because I hardcoded this interaction and may remove it in the future. Context: `seat` is the current seat (so, east).
 - `after_start`: Triggers at the start of each round. Context: `seat` is the current seat (so, east).
 - `after_turn_change`: Triggers at the end of each turn change. Context: `seat` is the seat whose turn it is after the turn change.
+- `after_win`: Triggers at the end of a win, after yaku is calculated.
 - `before_abortive_draw`: Triggers before an abortive draw is called. Context: `seat` is the seat whose turn it is at the time of the abortive draw.
 - `before_call`: Triggers at the start of any call. Context: `seat` is the caller's seat, `caller` is the caller's seat, `callee` is the seat called from, and `call` contains call information.
+- `before_conclusion`: Triggers at the end of a game (right before the end scores are shown).
+- `before_continue`: Triggers before the game continues, after someone wins in a bloody end game.
 - `before_exhaustive_draw`: Triggers before an exhaustive draw is called. Context: `seat` is the seat whose turn it is at the time of the exhaustive draw.
+- `before_start`: Triggers before a new round begins. This is useful to influence whether the game should continue or not (e.g. for tobi calculations).
 - `before_turn_change`: Triggers at the start of each turn change. Context: `seat` is the seat whose turn it is before the turn change.
-- `before_win`: Triggers before a win is called. Context: `seat` is the seat who called the win.
+- `before_win`: Triggers right before a win is called, before yaku is calculated. Context: `seat` is the seat who called the win.
+- `on_no_valid_tiles`: Triggers on someone's turn if they cannot discard any tiles.
 - `play_effects`: This is not actually an event like the others. Instead it is a list of action lists triggered on discards, where each action list is conditioned on the identity of the tile being discarded. Context: `seat` is the seat who played a tile, and `tile` is the played tile.
 
 Buttons:
@@ -473,6 +546,8 @@ Other:
 - `["set_tile_alias", from, to]`: Assigns all tiles in `from` to tiles in `to` for the current player. Basically if `from` is a single tile, then that tile becomes a joker whose possible values are the tiles in `to`, and this only applies to the current player.
 - `["set_tile_alias_all", from, to]`: Same, but applies this assignment to all players.
 - `["clear_tile_aliases"]`: Clears all joker assignments for the current player.
+- `["save_tile_aliases", label]`: Saves all joker assignments under the name `label` for the current player, which defaults to `"default"` when not supplied.
+- `["load_tile_aliases", label]`: Loads all joker assignments under the name `label` for the current player, which defaults to `"default"` when not supplied.
 - `["set_tile_ordering", [tile1, tile2, ...]]`: Asserts that `tile1` comes after `tile2` and so on. Applies only to the current player.
 - `["set_tile_ordering_all", [tile1, tile2, ...]]`: Same, but applies this assertion to all players.
 - `["add_attr", [target1, ...], [attr1, ...], [tile_spec1...]]`: Add the given attributes to the given targets that match all given tile specs.

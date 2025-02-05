@@ -4,7 +4,7 @@ defmodule Player do
     score: 0,
     start_score: 0, # for logging purposes
     nickname: nil,
-    # working
+    # working (reset every round)
     hand: [],
     draw: [],
     pond: [],
@@ -18,6 +18,8 @@ defmodule Player do
     call_name: "",
     tile_mappings: %{},
     tile_aliases: %{},
+    saved_tile_mappings: %{},
+    saved_tile_aliases: %{},
     tile_ordering: %{:"1m"=>:"2m", :"2m"=>:"3m", :"3m"=>:"4m", :"4m"=>:"5m", :"5m"=>:"6m", :"6m"=>:"7m", :"7m"=>:"8m", :"8m"=>:"9m",
                      :"1p"=>:"2p", :"2p"=>:"3p", :"3p"=>:"4p", :"4p"=>:"5p", :"5p"=>:"6p", :"6p"=>:"7p", :"7p"=>:"8p", :"8p"=>:"9p",
                      :"1s"=>:"2s", :"2s"=>:"3s", :"3s"=>:"4s", :"4s"=>:"5s", :"5s"=>:"6s", :"6s"=>:"7s", :"7s"=>:"8s", :"8s"=>:"9s"},
@@ -56,10 +58,12 @@ defmodule Game do
   defstruct [
     # params
     ruleset: nil,
-    session_id: nil,
+    room_code: nil,
     ruleset_json: nil,
     mods: nil,
     config: nil,
+    private: true,
+    reserved_seats: nil,
     # pids
     supervisor: nil,
     mutex: nil,
@@ -128,6 +132,7 @@ defmodule Game do
     max_revealed_tiles: 0,
     drawn_reserved_tiles: [],
     marking: Map.new([:east, :south, :west, :north], fn seat -> {seat, %{}} end),
+    processed_bloody_end: false,
   ]
   use Accessible
 end
@@ -152,10 +157,12 @@ defmodule RiichiAdvanced.GameState do
     GenServer.start_link(
       __MODULE__,
       %{
-        session_id: Keyword.get(init_data, :session_id),
+        room_code: Keyword.get(init_data, :room_code),
         ruleset: Keyword.get(init_data, :ruleset),
         mods: Keyword.get(init_data, :mods, []),
         config: Keyword.get(init_data, :config, nil),
+        private: Keyword.get(init_data, :private, true),
+        reserved_seats: Keyword.get(init_data, :reserved_seats, %{}),
       },
       name: Keyword.get(init_data, :name))
   end
@@ -174,15 +181,15 @@ defmodule RiichiAdvanced.GameState do
     # IO.puts("Game state PID is #{inspect(self())}")
 
     # lookup pids of the other processes we'll be using
-    [{debouncers, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("debouncers", state.ruleset, state.session_id))
-    [{supervisor, _}] = case Registry.lookup(:game_registry, Utils.to_registry_name("log", state.ruleset, state.session_id)) do
+    [{debouncers, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("debouncers", state.ruleset, state.room_code))
+    [{supervisor, _}] = case Registry.lookup(:game_registry, Utils.to_registry_name("log", state.ruleset, state.room_code)) do
       [{supervisor, _}] -> [{supervisor, nil}]
-      _ -> Registry.lookup(:game_registry, Utils.to_registry_name("game", state.ruleset, state.session_id))
+      _ -> Registry.lookup(:game_registry, Utils.to_registry_name("game", state.ruleset, state.room_code))
     end
-    [{mutex, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("mutex", state.ruleset, state.session_id))
-    [{ai_supervisor, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("ai_supervisor", state.ruleset, state.session_id))
-    [{exit_monitor, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("exit_monitor", state.ruleset, state.session_id))
-    [{smt_solver, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("smt_solver", state.ruleset, state.session_id))
+    [{mutex, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("mutex", state.ruleset, state.room_code))
+    [{ai_supervisor, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("ai_supervisor", state.ruleset, state.room_code))
+    [{exit_monitor, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("exit_monitor", state.ruleset, state.room_code))
+    [{smt_solver, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("smt_solver", state.ruleset, state.room_code))
 
     # initialize all debouncers
     {:ok, play_tile_debouncer_east} = debounce_worker(debouncers, 100, :play_tile_debouncer_east, :reset_play_tile_debounce, :east)
@@ -209,7 +216,7 @@ defmodule RiichiAdvanced.GameState do
 
     # read in the ruleset
     mods = Map.get(state, :mods, [])
-    ruleset_json = ModLoader.get_ruleset_json(state.ruleset, state.session_id, not Enum.empty?(mods))
+    ruleset_json = ModLoader.get_ruleset_json(state.ruleset, state.room_code, not Enum.empty?(mods))
 
     # apply mods
     ruleset_json = if state.ruleset != "custom" && not Enum.empty?(mods) do
@@ -217,20 +224,22 @@ defmodule RiichiAdvanced.GameState do
     else ruleset_json end
     if not Enum.empty?(mods) do
       # cache mods
-      RiichiAdvanced.ETSCache.put({state.ruleset, state.session_id}, mods, :cache_mods)
+      RiichiAdvanced.ETSCache.put({state.ruleset, state.room_code}, mods, :cache_mods)
     end
 
     # apply config
     ruleset_json = if state.config != nil do
-      JQ.merge_jsons!(ruleset_json, Regex.replace(~r{ //.*|/\*[.\n]*?\*/}, state.config, ""))
+      JQ.merge_jsons!(ruleset_json, RiichiAdvanced.ModLoader.strip_comments(state.config))
     else ruleset_json end
 
     # put params, debouncers, and process ids into state
     state = Map.merge(state, %Game{
       ruleset: state.ruleset,
-      session_id: state.session_id,
+      room_code: state.room_code,
       mods: state.mods,
       config: state.config,
+      private: state.private,
+      reserved_seats: state.reserved_seats,
       ruleset_json: ruleset_json,
       supervisor: supervisor,
       mutex: mutex,
@@ -245,7 +254,7 @@ defmodule RiichiAdvanced.GameState do
 
     # decode the rules json
     {state, rules} = try do
-      case Jason.decode(Regex.replace(~r{ //.*|/\*[.\n]*?\*/}, ruleset_json, "")) do
+      case Jason.decode(RiichiAdvanced.ModLoader.strip_comments(ruleset_json)) do
         {:ok, rules} -> {state, rules}
         {:error, err} ->
           IO.puts("Erroring json:")
@@ -454,6 +463,7 @@ defmodule RiichiAdvanced.GameState do
       |> Map.put(:saved_revealed_tiles, revealed_tiles)
       |> Map.put(:max_revealed_tiles, max_revealed_tiles)
       |> Map.put(:drawn_reserved_tiles, [])
+      |> Map.put(:processed_bloody_end, false)
 
       scores = kyoku_log["players"]
       |> Enum.zip(state.available_seats)
@@ -563,7 +573,7 @@ defmodule RiichiAdvanced.GameState do
       ++ Utils.ph(state.players[seat].calls |> Enum.flat_map(&Riichi.call_to_tiles/1))
     )
 
-    state = if Map.has_key?(state.rules, "bloody_end") && state.rules["bloody_end"] do
+    state = if Map.get(state.rules, "bloody_end", false) do
       # only end the round once there are three winners; otherwise, continue
       Map.put(state, :round_result, if map_size(state.winners) == 3 do :win else :continue end)
     else state end
@@ -638,10 +648,39 @@ defmodule RiichiAdvanced.GameState do
   end
 
   defp timer_finished(state) do
+    bloody_end = Map.get(state.rules, "bloody_end", false)
+    num_tenpai = Map.new(state.players, fn {seat, player} -> {seat, "tenpai" in player.status} end) |> Map.values() |> Enum.count(& &1)
+    num_nagashi = Map.new(state.players, fn {seat, player} -> {seat, "nagashi" in player.status} end) |> Map.values() |> Enum.count(& &1)
     cond do
       state.visible_screen == :winner && state.winner_index + 1 < map_size(state.winners) -> # need to see next winner screen
         # show the next winner
         state = Map.update!(state, :winner_index, & &1 + 1)
+
+        # reset timer
+        state = start_timer(state)
+
+        state
+      state.visible_screen == :scores && bloody_end && not state.processed_bloody_end && map_size(state.winners) >= 3 && (num_tenpai > 0 || num_nagashi > 0) ->
+        state
+        |> Map.put(:visible_screen, :bloody_end)
+        |> start_timer()
+        |> Map.put(:timer, 0)
+      state.visible_screen == :bloody_end ->
+        # if bloody end is enabled, we also check for tenpai and nagashi after 3 players win
+        # in practice, "nagashi" is used for void suit payments in SBR
+        prev_round_result = state.round_result
+        {state, delta_scores, delta_scores_reason, _next_dealer} = Scoring.adjudicate_draw_scoring(state)
+
+        state = Map.put(state, :processed_bloody_end, true)
+        state = Map.put(state, :visible_screen, :scores)
+        state = Map.put(state, :round_result, prev_round_result)
+        state = Map.put(state, :delta_scores, delta_scores)
+        state = Map.put(state, :delta_scores_reason, delta_scores_reason)
+
+        # run after_bloody_end actions
+        state = if Map.has_key?(state.rules, "after_bloody_end") do
+          Actions.run_actions(state, state.rules["after_bloody_end"]["actions"], %{seat: state.turn})
+        else state end
 
         # reset timer
         state = start_timer(state)
@@ -728,7 +767,7 @@ defmodule RiichiAdvanced.GameState do
             else
               if not state.log_loading_mode do
                 # seek to the next round
-                [{log_control_state, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("log_control_state", state.ruleset, state.session_id))
+                [{log_control_state, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("log_control_state", state.ruleset, state.room_code))
                 GenServer.cast(log_control_state, {:seek, state.kyoku + 1, -1})
                 state
               else state end
@@ -778,28 +817,6 @@ defmodule RiichiAdvanced.GameState do
     IO.puts("Game concluded")
     state = Map.put(state, :visible_screen, :game_end)
     state
-  end
-
-  defp fill_empty_seats_with_ai(state) do
-    if not state.log_seeking_mode do
-      state = for dir <- state.available_seats, Map.get(state, dir) == nil, reduce: state do
-        state ->
-          {:ok, ai_pid} = DynamicSupervisor.start_child(state.ai_supervisor, %{
-            id: RiichiAdvanced.AIPlayer,
-            start: {RiichiAdvanced.AIPlayer, :start_link, [%{game_state: self(), ruleset: state.ruleset, seat: dir, player: state.players[dir], wall: Utils.sort_tiles(state.wall ++ state.dead_wall), shanten_definitions: state.shanten_definitions}]},
-            restart: :permanent
-          })
-          IO.puts("Starting AI for #{dir}: #{inspect(ai_pid)}")
-          state = Map.put(state, dir, ai_pid)
-
-          # mark the ai as having clicked the timer, if one exists
-          state = update_player(state, dir, fn player -> %Player{ player | ready: true } end)
-          
-          state
-      end
-      notify_ai(state)
-      state
-    else state end
   end
 
   def has_unskippable_button?(state, seat) do
@@ -1047,7 +1064,7 @@ defmodule RiichiAdvanced.GameState do
       end
     end
     # IO.puts("broadcast_state_change called")
-    RiichiAdvancedWeb.Endpoint.broadcast(state.ruleset <> ":" <> state.session_id, "state_updated", %{"state" => state})
+    RiichiAdvancedWeb.Endpoint.broadcast(state.ruleset <> ":" <> state.room_code, "state_updated", %{"state" => state})
     # reset anim
     state = update_all_players(state, fn _seat, player -> %Player{ player | last_discard: nil } end)
     state
@@ -1055,7 +1072,7 @@ defmodule RiichiAdvanced.GameState do
 
   def play_sound(state, path, seat \\ nil) do
     if not state.log_loading_mode do
-      RiichiAdvancedWeb.Endpoint.broadcast(state.ruleset <> ":" <> state.session_id, "play_sound", %{"seat" => seat, "path" => path})
+      RiichiAdvancedWeb.Endpoint.broadcast(state.ruleset <> ":" <> state.room_code, "play_sound", %{"seat" => seat, "path" => path})
     end
   end
 
@@ -1090,7 +1107,7 @@ defmodule RiichiAdvanced.GameState do
     end
 
     # for players with no seats, initialize an ai
-    state = fill_empty_seats_with_ai(state)
+    GenServer.cast(self(), {:fill_empty_seats_with_ai, false})
     state = broadcast_state_change(state)
     state
   end
@@ -1109,18 +1126,21 @@ defmodule RiichiAdvanced.GameState do
 
   def handle_call({:new_player, socket}, _from, state) do
     {seat, spectator} = cond do
-      :east in state.available_seats  && Map.get(socket.assigns, :seat_param) == "east"  && (Map.get(state, :east)  == nil || is_pid(Map.get(state, :east)))  -> {:east, false}
-      :south in state.available_seats && Map.get(socket.assigns, :seat_param) == "south" && (Map.get(state, :south) == nil || is_pid(Map.get(state, :south))) -> {:south, false}
-      :west in state.available_seats  && Map.get(socket.assigns, :seat_param) == "west"  && (Map.get(state, :west)  == nil || is_pid(Map.get(state, :west)))  -> {:west, false}
-      :north in state.available_seats && Map.get(socket.assigns, :seat_param) == "north" && (Map.get(state, :north) == nil || is_pid(Map.get(state, :north))) -> {:north, false}
+      :east in state.available_seats  && Map.get(socket.assigns, :seat_param) == "east"  && (Map.get(state, :east)  == nil || is_pid(Map.get(state, :east)))  && Map.get(state.reserved_seats, :east,  nil) in [nil, socket.assigns.session_id] -> {:east, false}
+      :south in state.available_seats && Map.get(socket.assigns, :seat_param) == "south" && (Map.get(state, :south) == nil || is_pid(Map.get(state, :south))) && Map.get(state.reserved_seats, :south, nil) in [nil, socket.assigns.session_id] -> {:south, false}
+      :west in state.available_seats  && Map.get(socket.assigns, :seat_param) == "west"  && (Map.get(state, :west)  == nil || is_pid(Map.get(state, :west)))  && Map.get(state.reserved_seats, :west,  nil) in [nil, socket.assigns.session_id] -> {:west, false}
+      :north in state.available_seats && Map.get(socket.assigns, :seat_param) == "north" && (Map.get(state, :north) == nil || is_pid(Map.get(state, :north))) && Map.get(state.reserved_seats, :north, nil) in [nil, socket.assigns.session_id] -> {:north, false}
       Map.get(socket.assigns, :seat_param) == "spectator" -> {:east, true}
-      :east in state.available_seats  && Map.get(state, :east) == nil  || is_pid(Map.get(state, :east))  -> {:east, false}
-      :south in state.available_seats && Map.get(state, :south) == nil || is_pid(Map.get(state, :south)) -> {:south, false}
-      :west in state.available_seats  && Map.get(state, :west) == nil  || is_pid(Map.get(state, :west))  -> {:west, false}
-      :north in state.available_seats && Map.get(state, :north) == nil || is_pid(Map.get(state, :north)) -> {:north, false}
+      :east in state.available_seats  && (Map.get(state, :east) == nil  || is_pid(Map.get(state, :east)))  && Map.get(state.reserved_seats, :east,  nil) in [nil, socket.assigns.session_id] -> {:east, false}
+      :south in state.available_seats && (Map.get(state, :south) == nil || is_pid(Map.get(state, :south))) && Map.get(state.reserved_seats, :south, nil) in [nil, socket.assigns.session_id] -> {:south, false}
+      :west in state.available_seats  && (Map.get(state, :west) == nil  || is_pid(Map.get(state, :west)))  && Map.get(state.reserved_seats, :west,  nil) in [nil, socket.assigns.session_id] -> {:west, false}
+      :north in state.available_seats && (Map.get(state, :north) == nil || is_pid(Map.get(state, :north))) && Map.get(state.reserved_seats, :north, nil) in [nil, socket.assigns.session_id] -> {:north, false}
       true                                          -> {:east, true}
     end
     state = add_player(state, socket, seat, spectator)
+    state = if not spectator && Map.get(state.reserved_seats, seat, nil) == nil do
+      put_in(state.reserved_seats[seat], socket.assigns.session_id)
+    else state end
     {:reply, {state, seat, spectator}, state}
   end
   
@@ -1145,16 +1165,36 @@ defmodule RiichiAdvanced.GameState do
     else state end
 
     state = if Enum.all?(state.messages_states, fn {_seat, messages_state} -> messages_state == nil end) do
-      # all players and spectators have left, shutdown
-      IO.puts("Stopping game #{state.session_id}")
-      DynamicSupervisor.terminate_child(RiichiAdvanced.GameSessionSupervisor, state.supervisor)
+      # all players and spectators have left, schedule a shutdown
+      if map_size(state.reserved_seats) <= 1 do
+        # immediately stop solo games
+        GenServer.cast(self(), :terminate_game_if_empty)
+      else
+        IO.puts("Stopping game #{state.room_code} in 60 seconds")
+        :timer.apply_after(60000, GenServer, :cast, [self(), :terminate_game_if_empty])
+      end
       state
     else
-      state = fill_empty_seats_with_ai(state)
+      # schedule replacing empty seats with AI after 5 seconds
+      :timer.apply_after(5000, GenServer, :cast, [self(), {:fill_empty_seats_with_ai, true}])
       state = broadcast_state_change(state)
       state
     end
     {:reply, :ok, state}
+  end
+
+  def handle_call(:get_room_players, _from, state) do
+    reserved_seats = state.reserved_seats
+    |> Enum.filter(fn {seat, _session_id} -> seat != nil end)
+    |> Map.new(fn {seat, session_id} -> {seat, %RoomPlayer{
+      nickname: if state.players[seat].nickname == "" do
+          "player" <> String.slice(state[seat], 10, 4)
+        else state.players[seat].nickname end,
+      id: state[seat],
+      session_id: session_id,
+      seat: seat
+    }} end)
+    {:reply, reserved_seats, state}
   end
 
   def handle_call({:is_playable, seat, tile}, _from, state), do: {:reply, is_playable?(state, seat, tile), state}
@@ -1195,7 +1235,7 @@ defmodule RiichiAdvanced.GameState do
   def handle_call({:put_state, new_state}, _from, state) do
     new_state = Map.drop(new_state, [
       :ruleset,
-      :session_id,
+      :room_code,
       :ruleset_json,
       :mods,
       :supervisor,
@@ -1226,6 +1266,21 @@ defmodule RiichiAdvanced.GameState do
     {:reply, new_state, new_state}
   end
 
+  # used by lobby to get a room state from this game
+  def handle_call(:get_lobby_room, _from, state) do
+    lobby_room = %LobbyRoom{
+      players: Map.new(state.players, fn {seat, player} -> {seat,
+          if is_pid(state[seat]) do
+            %RoomPlayer{ nickname: player.nickname, seat: seat }
+          else nil end
+        } end),
+      mods: state.mods,
+      private: state.private,
+      started: true
+    }
+    {:reply, lobby_room, state}
+  end
+
   def handle_cast({:initialize_game, log}, state) do
     # run before_new_round actions
     state = if Map.has_key?(state.rules, "before_start") do
@@ -1233,6 +1288,41 @@ defmodule RiichiAdvanced.GameState do
     else state end
 
     state = initialize_new_round(state, log)
+    {:noreply, state}
+  end
+
+  def handle_cast(:terminate_game_if_empty, state) do
+    if Enum.all?(state.messages_states, fn {_seat, messages_state} -> messages_state == nil end) do
+      # all players and spectators have left, shutdown
+      IO.puts("Stopping game #{state.room_code}")
+      DynamicSupervisor.terminate_child(RiichiAdvanced.GameSessionSupervisor, state.supervisor)
+    else
+      IO.puts("Not stopping game #{state.room_code}")
+    end
+    {:noreply, state}
+  end
+
+  def handle_cast({:fill_empty_seats_with_ai, disconnected?}, state) do
+    state = if not state.log_seeking_mode do
+      state = for dir <- state.available_seats, Map.get(state, dir) == nil, disconnected? || not Map.has_key?(state.reserved_seats, dir), reduce: state do
+        state ->
+          {:ok, ai_pid} = DynamicSupervisor.start_child(state.ai_supervisor, %{
+            id: RiichiAdvanced.AIPlayer,
+            start: {RiichiAdvanced.AIPlayer, :start_link, [%{game_state: self(), ruleset: state.ruleset, seat: dir, player: state.players[dir], wall: Utils.sort_tiles(state.wall ++ state.dead_wall), shanten_definitions: state.shanten_definitions}]},
+            restart: :permanent
+          })
+          IO.puts("Starting AI for #{dir}: #{inspect(ai_pid)}")
+          state = Map.put(state, dir, ai_pid)
+
+          # mark the ai as having clicked the timer, if one exists
+          state = update_player(state, dir, &%Player{ &1 | nickname: nil, ready: true })
+          
+          state
+      end
+      notify_ai(state)
+      state = broadcast_state_change(state)
+      state
+    else state end
     {:noreply, state}
   end
 
@@ -1573,11 +1663,9 @@ defmodule RiichiAdvanced.GameState do
 
   def handle_cast({:declare_yaku, seat, yakus}, state) do
     state = update_player(state, seat, &%Player{ &1 | declared_yaku: yakus })
-    prefix = %{text: "Player #{seat} #{state.players[seat].nickname} declared that they will win with at least the following yaku:"}
-    yaku_string = Enum.map(yakus, fn yaku -> %{bold: true, text: yaku} end)
-    suffix = %{text: "(Shimizudani Ryuuka)"}
-    push_message(state, [prefix] ++ yaku_string ++ [suffix])
-    state = Buttons.recalculate_buttons(state)
+    button_name = state.players[seat].call_name
+    actions = state.rules["buttons"][button_name]["actions"]
+    state = Actions.submit_actions(state, seat, button_name, actions, nil, nil, nil, yakus)
     state = broadcast_state_change(state)
     {:noreply, state}
   end

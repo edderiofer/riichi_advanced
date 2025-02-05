@@ -21,7 +21,7 @@ defmodule RiichiAdvanced.GameState.Conditions do
           "pond" -> [{hand ++ state.players[context.seat].pond, calls}]
           "aside" -> [{hand ++ state.players[context.seat].aside, calls}]
           "aside_unique" -> [{hand ++ Enum.uniq(state.players[context.seat].aside), calls}]
-          "calls" -> [{hand, calls ++ state.players[context.seat].calls}]
+          "calls" -> [{hand, calls ++ Enum.reject(state.players[context.seat].calls, fn {call_name, _call} -> call_name in Riichi.flower_names() end)}]
           "flowers" -> [{hand, calls ++ Enum.filter(state.players[context.seat].calls, fn {call_name, _call} -> call_name in ["flower", "start_flower", "pei"] end)}]
           "start_flowers" -> [{hand, calls ++ Enum.filter(state.players[context.seat].calls, fn {call_name, _call} -> call_name == "start_flower" end)}]
           "jokers" -> [{hand, calls ++ Enum.filter(state.players[context.seat].calls, fn {call_name, _call} -> call_name in ["joker", "start_joker"] end)}]
@@ -397,14 +397,10 @@ defmodule RiichiAdvanced.GameState.Conditions do
         calls = cxt_player.calls
         call_tiles = [context.called_tile | context.call_choice]
         call = {context.call_name, Enum.map(call_tiles, fn tile -> {tile, false} end)}
-        hand_calls_def_before = Riichi.partially_apply_match_definitions(hand, calls, win_definitions, ordering, ordering_r, tile_aliases)
+        waits_before = Riichi.get_waits(hand, calls, win_definitions, state.all_tiles, ordering, ordering_r, tile_aliases, true)
         [call_removed | _] = Riichi.try_remove_all_tiles(hand ++ draw, Utils.strip_attrs(call_tiles))
-        hand_calls_def_after = Riichi.partially_apply_match_definitions(call_removed, calls ++ [call], win_definitions, ordering, ordering_r, tile_aliases)
-        Enum.any?(state.all_tiles, fn tile ->
-          waits_before = Riichi.is_waiting_on(tile, hand_calls_def_before, ordering, ordering_r, tile_aliases)
-          waits_after = Riichi.is_waiting_on(tile, hand_calls_def_after, ordering, ordering_r, tile_aliases)
-          waits_before != waits_after
-        end)
+        waits_after = Riichi.get_waits(call_removed, calls ++ [call], win_definitions, state.all_tiles, ordering, ordering_r, tile_aliases, true)
+        waits_before != waits_after
       "wait_count_at_least" ->
         number = Enum.at(opts, 0, 1)
         win_definitions = translate_match_definitions(state, Enum.at(opts, 1, []))
@@ -414,7 +410,7 @@ defmodule RiichiAdvanced.GameState.Conditions do
         hand = cxt_player.hand
         calls = cxt_player.calls
         waits = Riichi.get_waits(hand, calls, win_definitions, state.all_tiles, ordering, ordering_r, tile_aliases)
-        length(waits) >= number
+        MapSet.size(waits) >= number
       "wait_count_at_most" ->
         number = Enum.at(opts, 0, 1)
         win_definitions = translate_match_definitions(state, Enum.at(opts, 1, []))
@@ -424,7 +420,7 @@ defmodule RiichiAdvanced.GameState.Conditions do
         hand = cxt_player.hand
         calls = cxt_player.calls
         waits = Riichi.get_waits(hand, calls, win_definitions, state.all_tiles, ordering, ordering_r, tile_aliases)
-        length(waits) <= number
+        MapSet.size(waits) <= number
       "call_contains" ->
         tiles = Enum.at(opts, 0, []) |> Enum.map(&Utils.to_tile(&1))
         count = Enum.at(opts, 1, 1)

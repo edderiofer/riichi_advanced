@@ -1,9 +1,9 @@
 defmodule RiichiAdvanced.Riichi do
   alias RiichiAdvanced.Utils, as: Utils
 
-  @shift_suit %{:"1m"=>:"1p", :"2m"=>:"2p", :"3m"=>:"3p", :"4m"=>:"4p", :"5m"=>:"5p", :"6m"=>:"6p", :"7m"=>:"7p", :"8m"=>:"8p", :"9m"=>:"9p", :"10m"=>:"101p",
-                :"1p"=>:"1s", :"2p"=>:"2s", :"3p"=>:"3s", :"4p"=>:"4s", :"5p"=>:"5s", :"6p"=>:"6s", :"7p"=>:"7s", :"8p"=>:"8s", :"9p"=>:"9s", :"10p"=>:"101s",
-                :"1s"=>:"1m", :"2s"=>:"2m", :"3s"=>:"3m", :"4s"=>:"4m", :"5s"=>:"5m", :"6s"=>:"6m", :"7s"=>:"7m", :"8s"=>:"8m", :"9s"=>:"9m", :"10s"=>:"101m",
+  @shift_suit %{:"1m"=>:"1p", :"2m"=>:"2p", :"3m"=>:"3p", :"4m"=>:"4p", :"5m"=>:"5p", :"6m"=>:"6p", :"7m"=>:"7p", :"8m"=>:"8p", :"9m"=>:"9p", :"10m"=>:"10p",
+                :"1p"=>:"1s", :"2p"=>:"2s", :"3p"=>:"3s", :"4p"=>:"4s", :"5p"=>:"5s", :"6p"=>:"6s", :"7p"=>:"7s", :"8p"=>:"8s", :"9p"=>:"9s", :"10p"=>:"10s",
+                :"1s"=>:"1m", :"2s"=>:"2m", :"3s"=>:"3m", :"4s"=>:"4m", :"5s"=>:"5m", :"6s"=>:"6m", :"7s"=>:"7m", :"8s"=>:"8m", :"9s"=>:"9m", :"10s"=>:"10m",
                 :"0z"=>nil, :"1z"=>nil, :"2z"=>nil, :"3z"=>nil, :"4z"=>nil, :"5z"=>nil, :"6z"=>nil, :"7z"=>nil, :"8z"=>nil}
   def shift_suit(tile), do: @shift_suit[tile]
 
@@ -361,7 +361,7 @@ defmodule RiichiAdvanced.Riichi do
                     if consumes_call || consumes_match do
                       n = length(joker) 
                       to_remove = pairing |> Map.keys() |> Enum.take(to_remove_num)
-                      {from_joker, from_nojoker} = to_remove |> Enum.sort(:desc) |> Enum.split_while(fn i -> i >= n end)
+                      {from_joker, from_nojoker} = to_remove |> Enum.sort(:desc) |> Enum.split_while(fn i -> i < n end)
                       nojoker = for i <- from_nojoker, reduce: nojoker do nojoker -> List.delete_at(nojoker, i - n) end
                       joker   = for i <- from_joker,   reduce: joker   do joker   -> List.delete_at(joker,   i    ) end
                       ret = if is_hand do # is hand, so we keep all unmatched tiles
@@ -572,34 +572,6 @@ defmodule RiichiAdvanced.Riichi do
   end
   def can_call?(calls_spec, hand, ordering, ordering_r, called_tiles \\ [], tile_aliases \\ %{}, tile_mappings \\ %{}), do: Enum.any?(make_calls(calls_spec, hand, ordering, ordering_r, called_tiles, tile_aliases, tile_mappings), fn {_tile, choices} -> not Enum.empty?(choices) end)
 
-  # used in "call_changes_waits" condition
-  def partially_apply_match_definitions(hand, calls, match_definitions, ordering, ordering_r, tile_aliases \\ %{}) do
-    # take out one copy of each group to process last
-    decomposed_match_definitions = for match_definition <- match_definitions do
-      {result, _keywords} = for {match_definition_elem, i} <- Enum.with_index(match_definition), reduce: {[], []} do
-        {result, keywords} ->
-          unique = "unique" in keywords
-          case match_definition_elem do
-            [groups, num] when num == 1 or unique ->
-              # can't remove one from a unique group, so take out the whole group
-              entry = {List.delete_at(match_definition, i), keywords ++ [[groups, 1]]}
-              {[entry | result], keywords}
-            [groups, num] when num > 1      ->
-              entry = {List.replace_at(match_definition, i, [groups, num-1]), keywords ++ [[groups, 1]]}
-              {[entry | result], keywords}
-            [_groups, num] when num < 1     -> {result, keywords}
-            keyword when is_binary(keyword) -> {result, keywords ++ [keyword]}
-          end
-      end
-      Enum.reverse(result)
-    end |> Enum.concat()
-    for {def1, def2} <- decomposed_match_definitions do
-      removed = remove_match_definition(hand, calls, def1, ordering, ordering_r, tile_aliases)
-      IO.inspect({hand, def1, removed, def2})
-      {removed, def2}
-    end
-  end
-
   def apply_base_tile_to_offset(offset, base_tile, ordering, ordering_r) do
     cond do
       is_offset(offset)     -> offset_tile(base_tile, offset, ordering, ordering_r)
@@ -619,13 +591,6 @@ defmodule RiichiAdvanced.Riichi do
     end
   end
 
-  # hand_calls_def is the output of partially_apply_match_definitions
-  def is_waiting_on(tile, hand_calls_skipped, ordering, ordering_r, tile_aliases \\ %{}) do
-    Enum.any?(hand_calls_skipped, fn {hand, calls, skipped_match_defn} ->
-      match_hand(hand ++ [tile], calls, [skipped_match_defn], ordering, ordering_r, tile_aliases)
-    end)
-  end
-
   # get all unique waits for a given 14-tile match definition, like win
   # will not remove a wait if you have four of the tile in hand or calls
   def get_waits(hand, calls, match_definitions, all_tiles, ordering, ordering_r, tile_aliases \\ %{}, skip_tenpai_check \\ false) do
@@ -636,28 +601,35 @@ defmodule RiichiAdvanced.Riichi do
       # take the union of helpful tiles across all match definitions
       for match_definition <- match_definitions do
         # make it exhaustive, unless it's unique
-        match_definition = if "unique" not in match_definition do ["exhaustive" | match_definition] else match_definition end
+        match_definition = if "unique" not in match_definition && "exhaustive" not in match_definition do ["exhaustive" | match_definition] else match_definition end
         # IO.puts("\n" <> inspect(match_definition))
-        {_hand_calls, _keywords, waits_complement} = for {match_definition_elem, i} <- Enum.with_index(match_definition), reduce: {[{hand, calls}], [], all_tiles} do
-          {[], keywords, waits_complement}         -> {[], keywords, waits_complement}
-          {hand_calls, keywords, []}               -> {hand_calls, keywords, []}
-          {hand_calls, keywords, waits_complement} -> case match_definition_elem do
-            [_groups, num] when num <= 0 ->
-              # TODO lookahead; ignore for now
-              {hand_calls, keywords, waits_complement}
+        {_keywords, waits_complement} = for {last_match_definition_elem, i} <- Enum.with_index(match_definition), reduce: {[], all_tiles} do
+          {keywords, []}               -> {keywords, []}
+          {keywords, waits_complement} -> case last_match_definition_elem do
+            keyword when is_binary(keyword) -> {keywords ++ [keyword], waits_complement}
+            [_groups, num] when num <= 0 -> {keywords, waits_complement} # ignore lookaheads
             [groups, num] ->
-              # must remove groups num-1 times no matter what
+              # first remove all other groups
+              hand_calls = [{hand, calls}]
+              remaining_match_definition = List.delete_at(match_definition, i)
+              hand_calls = Enum.flat_map(hand_calls, fn {hand, calls} ->
+                remove_match_definition(hand, calls, remaining_match_definition, ordering, ordering_r, tile_aliases)
+              end)
+              |> Enum.uniq()
+
+              # then remove groups num-1 times no matter what
               # num_hand_calls = length(hand_calls)
               hand_calls = if num > 1 do
                 Enum.flat_map(hand_calls, fn {hand, calls} ->
                   remove_match_definition(hand, calls, keywords ++ [[groups, num - 1]], ordering, ordering_r, tile_aliases)
-                  |> Enum.uniq()
                 end)
+                |> Enum.uniq()
               else hand_calls end
 
               # try to remove the last one
+              final_match_definition = keywords ++ [[groups, 1]]
               {hand_calls_success, hand_calls_failure} = Enum.map(hand_calls, fn {hand, calls} ->
-                case remove_match_definition(hand, calls, keywords ++ [[groups, num - 1]], ordering, ordering_r, tile_aliases) do
+                case remove_match_definition(hand, calls, final_match_definition, ordering, ordering_r, tile_aliases) do
                   []         -> {[], [{hand, calls}]} # failure
                   hand_calls -> {hand_calls, []} # success (new hand_calls)
                 end
@@ -665,20 +637,22 @@ defmodule RiichiAdvanced.Riichi do
               |> Enum.unzip()
               hand_calls_success = Enum.concat(hand_calls_success)
               hand_calls_failure = Enum.concat(hand_calls_failure)
-              # IO.puts("#{inspect(keywords)} #{inspect(match_definition_elem)}: #{num_hand_calls} tries (#{length(hand_calls)} after filtering), #{length(hand_calls_success)} successes, #{length(hand_calls_failure)} failures")
+              # IO.puts("#{inspect(keywords)} #{inspect(last_match_definition_elem)}: #{num_hand_calls} tries (#{length(hand_calls)} after filtering), #{length(hand_calls_success)} successes, #{length(hand_calls_failure)} failures")
+              # IO.inspect(hand_calls_success, label: "hand_calls_success")
+              # IO.inspect(hand_calls_failure, label: "hand_calls_failure")
 
               # waits_complement = all waits that don't help
               # remove waits that do help
-              remaining_match_defn = keywords ++ [[groups, 1]] ++ Enum.drop(match_definition, i+1)
-              waits_complement = Enum.reject(waits_complement, fn wait ->
-                Enum.any?(hand_calls_failure, fn {hand, calls} ->
-                  match_hand([wait | hand], calls, [remaining_match_defn], ordering, ordering_r, tile_aliases)
+              waits_complement = if Enum.empty?(hand_calls_success) do
+                Enum.reject(waits_complement, fn wait ->
+                  Enum.any?(hand_calls_failure, fn {hand, calls} ->
+                    match_hand([wait | hand], calls, [final_match_definition], ordering, ordering_r, tile_aliases)
+                  end)
                 end)
-              end)
+              else all_tiles end
 
-              {hand_calls_success, keywords, waits_complement}
-            keyword when is_binary(keyword) -> {hand_calls, keywords ++ [keyword], waits_complement}
-            _ -> {hand_calls, keywords, waits_complement}
+              {keywords, waits_complement}
+            _ -> {keywords, waits_complement}
           end
         end
         # TODO maybe instead of taking union of differences, take the difference of intersection
@@ -739,6 +713,8 @@ defmodule RiichiAdvanced.Riichi do
     # also add all tile mappings
     |> Enum.flat_map(&Map.get(tile_mappings, &1, [&1]))
     |> Enum.uniq()
+    # also strip attrs
+    base_tiles = base_tiles ++ Utils.strip_attrs(base_tiles)
     # never let :any be a base tile
     base_tiles = base_tiles -- [:any, {:any, []}]
     # if there are no offsets, always return 1m as a base tile
@@ -802,7 +778,7 @@ defmodule RiichiAdvanced.Riichi do
       # filter out lookaheads from match definition
       match_definition = Enum.filter(match_definition, fn match_definition_elem -> is_binary(match_definition_elem) || with [_groups, num] <- match_definition_elem do num > 0 end end)
       # add exhaustive unless unique
-      if "unique" not in match_definition do ["exhaustive" | match_definition] else match_definition end
+      if "unique" not in match_definition && "exhaustive" not in match_definition do ["exhaustive" | match_definition] else match_definition end
     end
 
     {leftover_tiles, _} = Enum.flat_map(match_definitions, fn match_definition ->
@@ -930,25 +906,11 @@ defmodule RiichiAdvanced.Riichi do
     end
   end
 
-  defp calculate_pair_fu(tile, seat_wind, round_wind) do
-    fu = case Utils.strip_attrs(tile) do
-      :"1z" -> if :east  in [seat_wind, round_wind] do 2 else 0 end
-      :"2z" -> if :south in [seat_wind, round_wind] do 2 else 0 end
-      :"3z" -> if :west  in [seat_wind, round_wind] do 2 else 0 end
-      :"4z" -> if :north in [seat_wind, round_wind] do 2 else 0 end
-      :"5z" -> 2
-      :"6z" -> 2
-      :"7z" -> 2
-      :"8z" -> 2
-      :"0z" -> 2
-      _     -> 0
-    end
-    # double wind 4 fu
-    fu = if fu == 2 && tile in [:"1z", :"2z", :"3z", :"4z"] && seat_wind == round_wind do 4 else fu end
-    fu
+  defp calculate_pair_fu(tile, yakuhai, tile_aliases) do
+    2 * Utils.count_tiles(yakuhai, [Utils.strip_attrs(tile)], tile_aliases)
   end
 
-  defp _calculate_fu(starting_hand, calls, winning_tile, win_source, seat_wind, round_wind, ordering, ordering_r, tile_aliases, enable_kontsu_fu) do
+  defp _calculate_fu(starting_hand, calls, winning_tile, win_source, yakuhai, ordering, ordering_r, tile_aliases, enable_kontsu_fu) do
     # t = System.os_time(:millisecond)
 
     # IO.puts("Calculating fu for hand: #{inspect(Utils.sort_tiles(starting_hand))} + #{inspect(winning_tile)} and calls #{inspect(calls)}")
@@ -1082,19 +1044,19 @@ defmodule RiichiAdvanced.Riichi do
     fus = Enum.flat_map(hands_fu, fn {hand, fu} ->
       num_pairs = Enum.frequencies(hand) |> Map.values() |> Enum.count(& &1 == 2)
       cond do
-        length(hand) == 1 && Utils.count_tiles(hand, winning_tiles, tile_aliases) >= 1 -> [fu + 2 + calculate_pair_fu(Enum.at(hand, 0), seat_wind, round_wind)]
-        length(hand) == 2 && num_pairs == 1 -> [fu + calculate_pair_fu(Enum.at(hand, 0), seat_wind, round_wind)]
+        length(hand) == 1 && Utils.count_tiles(hand, winning_tiles, tile_aliases) >= 1 -> [fu + 2 + calculate_pair_fu(Enum.at(hand, 0), yakuhai, tile_aliases)]
+        length(hand) == 2 && num_pairs == 1 -> [fu + calculate_pair_fu(Enum.at(hand, 0), yakuhai, tile_aliases)]
         length(hand) == 4 && num_pairs == 2 ->
           [tile1, tile2] = Enum.uniq(hand)
-          tile1_fu = fu + calculate_pair_fu(tile2, seat_wind, round_wind) + (if tile1 in @terminal_honors do 4 else 2 end * if win_source == :draw do 2 else 1 end)
-          tile2_fu = fu + calculate_pair_fu(tile1, seat_wind, round_wind) + (if tile2 in @terminal_honors do 4 else 2 end * if win_source == :draw do 2 else 1 end)
+          tile1_fu = fu + calculate_pair_fu(tile2, yakuhai, tile_aliases) + (if tile1 in @terminal_honors do 4 else 2 end * if win_source == :draw do 2 else 1 end)
+          tile2_fu = fu + calculate_pair_fu(tile1, yakuhai, tile_aliases) + (if tile2 in @terminal_honors do 4 else 2 end * if win_source == :draw do 2 else 1 end)
           if Utils.count_tiles([tile1], winning_tiles, tile_aliases) == 1 do [tile1_fu] else [] end
           ++ if Utils.count_tiles([tile2], winning_tiles, tile_aliases) == 1 do [tile2_fu] else [] end
         # cosmic hand
         enable_kontsu_fu && length(hand) == 4 && num_pairs == 1 ->
           {pair_tile, _freq} = Enum.frequencies(hand) |> Enum.find(fn {_tile, freq} -> freq == 2 end)
           [mixed1, _mixed2] = hand -- [pair_tile, pair_tile]
-          pair_fu = calculate_pair_fu(pair_tile, seat_wind, round_wind)
+          pair_fu = calculate_pair_fu(pair_tile, yakuhai, tile_aliases)
           kontsu_fu = (if mixed1 in @terminal_honors do 2 else 1 end * if win_source == :draw do 2 else 1 end)
           [fu + pair_fu + kontsu_fu]
         true                                                    -> []
@@ -1142,11 +1104,11 @@ defmodule RiichiAdvanced.Riichi do
     ret
   end
 
-  def calculate_fu(starting_hand, calls, winning_tile, win_source, seat_wind, round_wind, ordering, ordering_r, tile_aliases \\ %{}, enable_kontsu_fu \\ false) do
-    case RiichiAdvanced.ETSCache.get({:calculate_fu, starting_hand, calls, winning_tile, win_source, seat_wind, round_wind, ordering, tile_aliases, enable_kontsu_fu}) do
+  def calculate_fu(starting_hand, calls, winning_tile, win_source, yakuhai, ordering, ordering_r, tile_aliases \\ %{}, enable_kontsu_fu \\ false) do
+    case RiichiAdvanced.ETSCache.get({:calculate_fu, starting_hand, calls, winning_tile, win_source, yakuhai, ordering, tile_aliases, enable_kontsu_fu}) do
       [] -> 
-        result = _calculate_fu(starting_hand, calls, winning_tile, win_source, seat_wind, round_wind, ordering, ordering_r, tile_aliases, enable_kontsu_fu)
-        RiichiAdvanced.ETSCache.put({:calculate_fu, starting_hand, calls, winning_tile, win_source, seat_wind, round_wind, ordering, tile_aliases, enable_kontsu_fu}, result)
+        result = _calculate_fu(starting_hand, calls, winning_tile, win_source, yakuhai, ordering, ordering_r, tile_aliases, enable_kontsu_fu)
+        RiichiAdvanced.ETSCache.put({:calculate_fu, starting_hand, calls, winning_tile, win_source, yakuhai, ordering, tile_aliases, enable_kontsu_fu}, result)
         result
       [result] -> result
     end
@@ -1159,7 +1121,7 @@ defmodule RiichiAdvanced.Riichi do
       if is_dealer do 2 else 3 end
     end
     ko_payment = trunc(Float.ceil(score / divisor / han_fu_rounding_factor) * han_fu_rounding_factor)
-    oya_payment = trunc(Float.ceil(2 * score / divisor / han_fu_rounding_factor) * han_fu_rounding_factor)
+    oya_payment = trunc(Float.round(2 * score / divisor / han_fu_rounding_factor) * han_fu_rounding_factor)
     # oya_payment is only relevant if is_dealer is false
     # (it is just double ko payment if is_dealer is true, which is useless)
     {ko_payment, oya_payment}

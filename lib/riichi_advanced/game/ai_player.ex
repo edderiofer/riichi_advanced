@@ -171,6 +171,14 @@ defmodule RiichiAdvanced.AIPlayer do
         playables = playable_hand ++ playable_draw
         |> Enum.filter(fn {tile, _i} -> GenServer.call(state.game_state, {:is_playable, state.seat, tile}) end)
 
+        non_voided_playables = cond do
+          "void_manzu" in player.status -> Enum.filter(playables, fn {tile, _i} -> Riichi.is_manzu?(tile) end)
+          "void_pinzu" in player.status -> Enum.filter(playables, fn {tile, _i} -> Riichi.is_pinzu?(tile) end)
+          "void_souzu" in player.status -> Enum.filter(playables, fn {tile, _i} -> Riichi.is_souzu?(tile) end)
+          true -> []
+        end
+        playables = if Enum.empty?(non_voided_playables) do playables else non_voided_playables end
+
         if not Enum.empty?(playables) do
           # pick a random tile
           # {_tile, index} = Enum.random(playables)
@@ -371,7 +379,6 @@ defmodule RiichiAdvanced.AIPlayer do
 
   def handle_info({:set_best_minefield_hand, minefield_tiles, minefield_hand}, state) do
     minefield_waits = Riichi.get_waits(minefield_hand, [], state.shanten_definitions.win, state.wall, state.player.tile_ordering, state.player.tile_ordering_r, state.player.tile_aliases, true)
-    IO.inspect(minefield_hand)
     state = state
     |> Map.put(:minefield_tiles, minefield_tiles)
     |> Map.put(:minefield_hand, minefield_hand)

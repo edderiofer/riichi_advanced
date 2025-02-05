@@ -17,8 +17,7 @@ defmodule RiichiAdvanced.ModLoader do
     mod_contents = mod_names
     |> Enum.map(&File.read!(Application.app_dir(:riichi_advanced, "/priv/static/mods/#{&1 <> ".jq"}")))
     |> Enum.map(&String.trim/1)
-    |> Enum.map(&" | (#{&1}\n) as $_result\n|\n$_result")
-    |> Enum.join()
+    |> Enum.map_join(&" | (#{&1}\n) as $_result\n|\n$_result")
     |> then(&".enabled_mods += #{mod_names_to_array(mod_names)}"<>&1)
     # IO.puts(mod_contents)
 
@@ -47,6 +46,7 @@ defmodule RiichiAdvanced.ModLoader do
   @modpacks %{
     "sanma" => %{
       display_name: "Sanma",
+      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/sanma.md",
       ruleset: "riichi",
       mods: ["sanma"],
       default_mods: [],
@@ -73,7 +73,7 @@ defmodule RiichiAdvanced.ModLoader do
     },
     "galaxy" => %{
       display_name: "Galaxy Mahjong",
-      tutorial_link: "https://www.youtube.com/watch?v=IDaKM7eU7zE",
+      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/galaxy.md",
       ruleset: "riichi",
       mods: [],
       default_mods: ["galaxy"],
@@ -90,6 +90,13 @@ defmodule RiichiAdvanced.ModLoader do
       ruleset: "riichi",
       mods: ["minefield"],
       default_mods: ["kiriage_mangan"],
+    },
+    "kansai" => %{
+      display_name: "Kansai Sanma",
+      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/kansai.md",
+      ruleset: "riichi",
+      mods: ["sanma", "dora", "aka", "nagashi", "kansai"],
+      default_mods: ["tobi"],
     }
   }
 
@@ -100,9 +107,9 @@ defmodule RiichiAdvanced.ModLoader do
     end
   end
 
-  def get_ruleset_json(ruleset, session_id \\ nil, strip_comments \\ false) do
+  def get_ruleset_json(ruleset, room_code \\ nil, strip_comments? \\ false) do
     if ruleset == "custom" do
-      case RiichiAdvanced.ETSCache.get(session_id, ["{}"], :cache_rulesets) do
+      case RiichiAdvanced.ETSCache.get(room_code, ["{}"], :cache_rulesets) do
         [ruleset_json] -> ruleset_json
         _ -> "{}"
       end
@@ -113,20 +120,24 @@ defmodule RiichiAdvanced.ModLoader do
         display_name = Map.get(modpack, :display_name, ruleset)
         query = ".default_mods += #{mod_names_to_array(Map.get(modpack, :default_mods, []))} | .display_name = \"#{display_name}\""
         query = query <> " | " <> if Map.has_key?(modpack, :tutorial_link) do ".tutorial_link = \"#{modpack.tutorial_link}\"" else "del(.tutorial_link)" end
-        Regex.replace(~r{ //.*|/\*[.\n]*?\*/}, read_ruleset_json(modpack.ruleset), "")
+        modpack.ruleset
+        |> read_ruleset_json()
+        |> strip_comments()
         |> apply_mods(mod_names, modpack.ruleset)
         |> JQ.query_string_with_string!(query)
       else
         ruleset_json = read_ruleset_json(ruleset)
-        if strip_comments do
-          Regex.replace(~r{ //.*|/\*[.\n]*?\*/}, ruleset_json, "")
-        else ruleset_json end
+        if strip_comments? do strip_comments(ruleset_json) else ruleset_json end
       end
     end
   end
 
   @default_config """
   {
+    // this is for advanced users!
+    // this JSON gets merged into the existing ruleset (after applying mods)
+    // the below is helpful to test out yaku and stuff
+
     // "starting_hand": {
     //   "east": ["1m", "9m", "1p", "9p", "1s", "9s", "1z", "2z", "3z", "4z", "5z", "6z", "7z"]
     // },
@@ -134,10 +145,14 @@ defmodule RiichiAdvanced.ModLoader do
   }
   """
 
-  def get_config_json(ruleset, session_id) do
-    case RiichiAdvanced.ETSCache.get({ruleset, session_id}, [@default_config], :cache_configs) do
+  def get_config_json(ruleset, room_code) do
+    case RiichiAdvanced.ETSCache.get({ruleset, room_code}, [@default_config], :cache_configs) do
       [ruleset_json] -> ruleset_json
       _ -> @default_config
     end
+  end
+
+  def strip_comments(json) do
+    Regex.replace(~r{^//.*|\s//.*|/\*[.\n]*?\*/}, json, "")
   end
 end

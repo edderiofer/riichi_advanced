@@ -23,10 +23,11 @@ defmodule RiichiAdvanced.GameState.Scoring do
       |> Enum.map(fn {name, _value} -> name end)
       |> Enum.uniq()
       |> Enum.map(fn name -> {name, yaku_map[name]} end)
-    if Map.has_key?(state.rules, "yaku_precedence") do
+    eligible_yaku = if Map.has_key?(state.rules, "yaku_precedence") do
       excluded_yaku = Enum.flat_map(eligible_yaku, fn {name, _value} -> Map.get(state.rules["yaku_precedence"], name, []) end)
       Enum.reject(eligible_yaku, fn {name, value} -> name in excluded_yaku || value in excluded_yaku end)
     else eligible_yaku end
+    eligible_yaku
   end
 
   defp get_yaku(state, yaku_list, seat, winning_tile, win_source, minipoints, existing_yaku) do
@@ -41,6 +42,28 @@ defmodule RiichiAdvanced.GameState.Scoring do
     end
   end
 
+  def get_yakuhai(state, seat) do
+    dragons = [:"5z", :"6z", :"7z"]
+    seat_wind = case Riichi.get_seat_wind(state.kyoku, seat, state.available_seats) do
+      :east -> :"1z"
+      :south -> :"2z"
+      :west -> :"3z"
+      :north -> :"4z"
+    end
+    round_wind = case Riichi.get_round_wind(state.kyoku, length(state.available_seats)) do
+      :east -> :"1z"
+      :south -> :"2z"
+      :west -> :"3z"
+      :north -> :"4z"
+    end
+    north_wind = if Map.get(state.rules["score_calculation"], "north_wind_yakuhai", false) do [:"4z"] else [] end
+    if Map.get(state.rules["score_calculation"], "double_wind_4_fu", false) do
+      dragons ++ [seat_wind, round_wind] ++ north_wind
+    else
+      dragons ++ Enum.dedup([seat_wind, round_wind]) ++ north_wind
+    end
+  end
+
   def get_minipoints(state, seat, winning_tile, win_source) do
     counter_fu = Map.get(state.players[seat].counters, "fu", 0)
     if counter_fu > 0 do
@@ -48,7 +71,7 @@ defmodule RiichiAdvanced.GameState.Scoring do
     else
       score_rules = state.rules["score_calculation"]
       enable_kontsu_fu = Map.get(score_rules, "enable_kontsu_fu", false)
-      Riichi.calculate_fu(state.players[seat].hand, state.players[seat].calls, winning_tile, win_source, Riichi.get_seat_wind(state.kyoku, seat, state.available_seats), Riichi.get_round_wind(state.kyoku, length(state.available_seats)), state.players[seat].tile_ordering, state.players[seat].tile_ordering_r, state.players[seat].tile_aliases, enable_kontsu_fu)
+      Riichi.calculate_fu(state.players[seat].hand, state.players[seat].calls, winning_tile, win_source, get_yakuhai(state, seat), state.players[seat].tile_ordering, state.players[seat].tile_ordering_r, state.players[seat].tile_aliases, enable_kontsu_fu)
     end
   end
 
@@ -84,10 +107,15 @@ defmodule RiichiAdvanced.GameState.Scoring do
 
   def get_best_yaku_from_lists(state, yaku_list_names, seat, winning_tiles, win_source) do
     # returns {yaku, minipoints, new_winning_tile}
+    declare_only_yaku_list_names = Map.get(state.rules["score_calculation"], "declare_only_yaku_lists", [])
     for yaku_list_name <- yaku_list_names, reduce: {[], 0, nil} do
       {yaku, minipoints, new_winning_tile} ->
         if Map.has_key?(state.rules, yaku_list_name) do
-          {new_winning_tile, {minipoints, yaku}} = get_best_yaku_and_winning_tile(state, state.rules[yaku_list_name], seat, winning_tiles, win_source, yaku)
+          yaku_list = if yaku_list_name in declare_only_yaku_list_names do
+            declared_yaku = state.players[seat].declared_yaku
+            Enum.filter(state.rules[yaku_list_name], fn yaku_obj -> yaku_obj["display_name"] in declared_yaku end)
+          else state.rules[yaku_list_name] end
+          {new_winning_tile, {minipoints, yaku}} = get_best_yaku_and_winning_tile(state, yaku_list, seat, winning_tiles, win_source, yaku)
           {yaku, minipoints, new_winning_tile}
         else
           {yaku, minipoints, new_winning_tile}
@@ -222,7 +250,6 @@ defmodule RiichiAdvanced.GameState.Scoring do
       # assumes 3-player
       han_fu_rounding_factor = Map.get(score_rules, "han_fu_rounding_factor", 100)
       {ko_payment, oya_payment} = Riichi.calc_ko_oya_points(score, is_dealer, 4, han_fu_rounding_factor)
-      IO.inspect({score, ko_payment, oya_payment})
       if is_dealer do ko_payment * 2 else oya_payment + ko_payment end
     else score end
 
@@ -616,9 +643,8 @@ defmodule RiichiAdvanced.GameState.Scoring do
     # get next dealer
     agarirenchan = Map.get(score_rules, "agarirenchan", false)
     next_dealer_is_first_winner = Map.get(score_rules, "next_dealer_is_first_winner", false)
-    next_dealer = if next_dealer_is_first_winner do
-      processing_first_win = map_size(winners) == map_size(state.winners)
-      if processing_first_win do
+    next_dealer = cond do
+      next_dealer_is_first_winner && map_size(winners) == map_size(state.winners) ->
         {_seat, winner} = Enum.at(winners, 0)
         dealer_seat = Riichi.get_east_player_seat(state.kyoku, state.available_seats)
         new_dealer_seat = cond do
@@ -627,9 +653,8 @@ defmodule RiichiAdvanced.GameState.Scoring do
           true                        -> winner.payer # if there are multiple first winners, the payer becomes the next dealer instead
         end
         Utils.get_relative_seat(dealer_seat, new_dealer_seat)
-      else nil end
-    else
-      if agarirenchan && Map.has_key?(state.winners, Riichi.get_east_player_seat(state.kyoku, state.available_seats)) do :self else :shimocha end
+      agarirenchan && Map.has_key?(state.winners, Riichi.get_east_player_seat(state.kyoku, state.available_seats)) -> :self
+      true -> :shimocha
     end
 
     {state, delta_scores, delta_scores_reason, next_dealer}
@@ -637,52 +662,52 @@ defmodule RiichiAdvanced.GameState.Scoring do
 
   def adjudicate_draw_scoring(state) do
     score_rules = state.rules["score_calculation"]
-
-    score_best_hand_at_draw = Map.get(score_rules, "score_best_hand_at_draw", false)
     draw_tenpai_payments = Map.get(score_rules, "draw_tenpai_payments", nil)
     draw_nagashi_payments = Map.get(score_rules, "draw_nagashi_payments", nil)
     tenpai = Map.new(state.players, fn {seat, player} -> {seat, "tenpai" in player.status} end)
     nagashi = Map.new(state.players, fn {seat, player} -> {seat, "nagashi" in player.status} end)
     num_tenpai = tenpai |> Map.values() |> Enum.count(& &1)
     num_nagashi = nagashi |> Map.values() |> Enum.count(& &1)
+    delta_scores = Map.new(state.players, fn {seat, _player} -> {seat, 0} end)
+
     {state, delta_scores} = cond do
-      score_best_hand_at_draw ->
+      # handle sichuan style scoring best hands at draw (if any non-winner is tenpai)
+      Map.get(score_rules, "score_best_hand_at_draw", false) && map_size(state.winners) < 3 && Enum.any?(tenpai, fn {seat, tenpai?} -> tenpai? && seat not in state.winner_seats end) ->
         # declare tenpai players as winners, as if they won from non-tenpai people (opponents)
         opponents = Enum.flat_map(tenpai, fn {seat, tenpai?} -> if not tenpai? do [seat] else [] end end)
-        state = if Map.get(score_rules, "payments_at_exhaustive_draw", false) do
-          # for each tenpai player who hasn't won, find the highest point hand they could get
-          win_definitions = translate_match_definitions(state, ["win"])
-          winners_before = Map.keys(state.winners)
-          for {seat, tenpai?} <- tenpai, tenpai?, seat not in winners_before, reduce: state do
-            state ->
-              # calculate possible waits
-              winner = state.players[seat]
-              waits = Riichi.get_waits(winner.hand, winner.calls, win_definitions, state.all_tiles, winner.tile_ordering, winner.tile_ordering_r, winner.tile_aliases)
+        # for each tenpai player who hasn't won, find the highest point hand they could get
+        win_definitions = translate_match_definitions(state, ["win"])
+        winners_before = state.winner_seats
+        state = for {seat, tenpai?} <- tenpai, tenpai?, seat not in winners_before, reduce: state do
+          state ->
+            # calculate possible waits
+            winner = state.players[seat]
+            waits = Riichi.get_waits(winner.hand, winner.calls, win_definitions, state.all_tiles, winner.tile_ordering, winner.tile_ordering_r, winner.tile_aliases)
 
-              # display nothing if waits are empty
-              # shouldn't happen under normal conditions, since tenpai implies nonempty waits
-              waits = if Enum.empty?(waits) do MapSet.new([:"2x"]) else waits end
+            # display nothing if waits are empty
+            # shouldn't happen under normal conditions, since tenpai implies nonempty waits
+            waits = if Enum.empty?(waits) do MapSet.new([:"2x"]) else waits end
 
-              # calculate new winner object
-              state2 = Map.put(state, :wall_index, 0) # use this so haitei isn't scored
-              winner = calculate_winner_details(state2, seat, waits, :draw)
-              |> Map.put(:opponents, opponents)
+            # calculate new winner object
+            state2 = Map.put(state, :wall_index, 0) # use this so haitei isn't scored
+            winner = calculate_winner_details(state2, seat, waits, :draw)
+            |> Map.put(:opponents, opponents)
+            |> Map.put(:best_hand_at_draw, true)
 
-              # add winner to state
-              state
-              |> Map.update!(:winners, &Map.put(&1, seat, winner))
-              |> Map.update!(:winner_seats, & &1 ++ [seat])
-          end
-        else state end
+            # add winner to state
+            state
+            |> Map.update!(:winners, &Map.put(&1, seat, winner))
+            |> Map.update!(:winner_seats, & &1 ++ [seat])
+        end
 
         next_screen = if Enum.any?(state.winners, fn {_seat, winner} -> not Map.has_key?(winner, :processed) end) do :winner else :scores end
         state = state
         |> Map.put(:visible_screen, next_screen)
         |> Map.put(:round_result, :draw)
-        |> update_all_players(fn seat, player -> %Player{ player | hand_revealed: player.hand_revealed || tenpai[seat] } end)
+        |> update_all_players(fn _seat, player -> %Player{ player | hand_revealed: true } end)
 
-        delta_scores = Map.new(state.players, fn {seat, _player} -> {seat, 0} end)
         {state, delta_scores}
+      # handle nagashi
       draw_nagashi_payments != nil && num_nagashi > 0 -> 
         # do nagashi payments
         # the way we do it kind of sucks: we modify the state and calculate the delta scores based on the total modification
@@ -759,7 +784,7 @@ defmodule RiichiAdvanced.GameState.Scoring do
         state = update_all_players(state, fn seat, player -> %Player{ player | hand_revealed: player.hand_revealed || tenpai[seat] } end)
 
         {state, delta_scores}
-      true -> {state, Map.new(state.players, fn {seat, _player} -> {seat, 0} end)}
+      true -> {state, delta_scores}
     end
 
     # handle hanada kirame's scoring quirk
@@ -772,7 +797,12 @@ defmodule RiichiAdvanced.GameState.Scoring do
     end
 
     tenpairenchan = Map.get(score_rules, "tenpairenchan", false)
-    next_dealer = if tenpairenchan && tenpai[Riichi.get_east_player_seat(state.kyoku, state.available_seats)] do :self else :shimocha end
+    notenrenchan_south = Map.get(score_rules, "notenrenchan_south", false)
+    next_dealer = cond do
+      tenpairenchan && tenpai[Riichi.get_east_player_seat(state.kyoku, state.available_seats)] -> :self
+      notenrenchan_south && Riichi.get_round_wind(state.kyoku, length(state.available_seats)) == :south -> :self
+      true -> :shimocha
+    end
 
     {state, delta_scores, delta_scores_reason, next_dealer}
   end
@@ -840,8 +870,7 @@ defmodule RiichiAdvanced.GameState.Scoring do
     |> Map.new()
     if not Enum.empty?(joker_assignment) do
       joker_assignment_message = joker_assignment
-      |> Enum.map(fn {joker_tile, tile} -> [Utils.pt(joker_tile), %{text: "→"}, Utils.pt(tile)] end)
-      |> Enum.intersperse([%{text: ","}])
+      |> Enum.map_intersperse([%{text: ","}], fn {joker_tile, tile} -> [Utils.pt(joker_tile), %{text: "→"}, Utils.pt(tile)] end)
       |> Enum.concat()
       push_message(state, [%{text: "Using joker assignment"}] ++ joker_assignment_message)
     end
