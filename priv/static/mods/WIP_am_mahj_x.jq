@@ -8,9 +8,9 @@
   # All players start with thirteen tiles.
 .after_turn_change.actions -= [["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [["when", ["not_no_tiles_remaining"], [["draw"]]]]]]
 |
-.after_turn_change.actions += [["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [["when", ["not_no_tiles_remaining", {"name": "status", "opts": ["charleston_happened"]}], [["draw"]]]]]]
+.after_turn_change.actions += [["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [["when", ["not_no_tiles_remaining", {"name": "status", "opts": ["started"]}], [["draw"]]]]]]
 |
-.after_charleston.actions += [["set_status_all", "charleston_happened"]]
+.after_start.actions += [["set_status_all", "started"]]
 |
   # All Charleston passes are blind or negotiated.
     # should be easy. change:
