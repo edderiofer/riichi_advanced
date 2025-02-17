@@ -1,64 +1,17 @@
   # Each player begins with a joker.
-    # change:
-
-#  "starting_tiles": 13,
-
-    # to:
-
-#  "starting_tiles": 12,
-
-    # and:
-
-#  "after_start": {
-#    "actions": [
-#      ["set_status_all", "match_start", "first_charleston", "charleston_right", "heavenly_available"],
-#      ["set_tile_alias_all", ["1j"], ["any"]],
-#      ["set_tile_alias_all", ["2f", "3f", "4f", "1g", "2g", "3g", "4g"], ["1f"]]
-#    ]
-#  },
-
-    # and:
-
-#  "after_start": {
-#    "actions": [
-#      ["set_status_all", "match_start", "first_charleston", "charleston_right", "heavenly_available"],
-#      ["set_tile_alias_all", ["1j"], ["any"]],
-#      ["set_tile_alias_all", ["2f", "3f", "4f", "1g", "2g", "3g", "4g"], ["1f"]],
-#      ["as", "all", ["draw", 1, "1j"]]
-#    ]
-#  },
-
-    # and you might also have to change the wall to have four fewer jokers
-
+.wall -= ["1j", "1j", "1j", "1j"]
+|
+.starting_tiles = 12,
+|
+.after_start.actions += [["as", "all", ["draw", 1, "1j"]]]
+|
   # All players start with thirteen tiles.
-    # should be doable. we need to change:
-    
-#  "after_turn_change": {
-#    "actions": [
-#      ["when", ["no_tiles_remaining"], [["pause", 1000], ["ryuukyoku"]]],
-#      // if dead hand, skip your turn, otherwise, draw a tile
-#      ["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [
-#        ["when", ["not_no_tiles_remaining"], [["draw"]]]
-#      ]]
-#    ]
-#  },
-
-    # to:
-    
-#  "after_turn_change": {
-#    "actions": [
-#      ["when", ["no_tiles_remaining"], [["pause", 1000], ["ryuukyoku"]]],
-#      // if dead hand, skip your turn, otherwise, draw a tile
-#      ["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [
-#        ["when", ["not_no_tiles_remaining", {"name": "status", "opts": ["after_charleston"]}], [["draw"]]]
-#      ]]
-#    ]
-#  },
-
-    # or something like that, and then set the "after_charleston" variable only after the charleston has started.
-
-  # East deals the tiles.
-    # irrelevant
+.after_turn_change.actions -= [["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [["when", ["not_no_tiles_remaining"], [["draw"]]]]]]
+|
+.after_turn_change.actions += [["ite", [{"name": "status", "opts": ["dead_hand"]}], [["advance_turn"]], [["when", ["not_no_tiles_remaining", {"name": "status", "opts": ["charleston_happened"]}], [["draw"]]]]]]
+|
+.after_charleston.actions += [["set_status_all", "charleston_happened"]]
+|
   # All Charleston passes are blind or negotiated.
     # should be easy. change:
 
