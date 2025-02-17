@@ -1,5 +1,35 @@
   # Each player begins with a joker.
-    # not sure how to implement this yet
+    # change:
+
+#  "starting_tiles": 13,
+
+    # to:
+
+#  "starting_tiles": 12,
+
+    # and:
+
+#  "after_start": {
+#    "actions": [
+#      ["set_status_all", "match_start", "first_charleston", "charleston_right", "heavenly_available"],
+#      ["set_tile_alias_all", ["1j"], ["any"]],
+#      ["set_tile_alias_all", ["2f", "3f", "4f", "1g", "2g", "3g", "4g"], ["1f"]]
+#    ]
+#  },
+
+    # and:
+
+#  "after_start": {
+#    "actions": [
+#      ["set_status_all", "match_start", "first_charleston", "charleston_right", "heavenly_available"],
+#      ["set_tile_alias_all", ["1j"], ["any"]],
+#      ["set_tile_alias_all", ["2f", "3f", "4f", "1g", "2g", "3g", "4g"], ["1f"]],
+#      ["as", "all", ["draw", 1, "1j"]]
+#    ]
+#  },
+
+    # and you might also have to change the wall to have four fewer jokers
+
   # All players start with thirteen tiles.
     # should be doable. we need to change:
     
@@ -115,7 +145,23 @@
 #    },
 
   # Tiles may be added to or removed from exposures.
-    # probably difficult, but also probably doable
+    # probably difficult, but also probably doable. steal code for kakan:
+
+#    "kakan": {
+#      "display_name": "Kong",
+#      "call": [[0, 0, 0]],
+#      "upgrades": "pon",
+#      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "our_turn", "not_no_tiles_remaining", "has_draw", "can_upgrade_call", {"name": "status_missing", "opts": ["just_reached"]}],
+#      "actions": [
+#        ["big_text", "Kong"], ["upgrade_call"],
+#        ["when", [{"name": "status", "opts": ["kan"]}], [["set_status", "double_kan"]]],
+#        ["set_status", "kan"],
+#        ["draw", 1, "opposite_end"]
+#      ]
+#    },
+
+    # and rename to "am_upgrade" vs "am_downgrade"
+
   # Consecutive runs may be played backwards.
     # probably requires engine change
   # A point-based scoring system is used.
