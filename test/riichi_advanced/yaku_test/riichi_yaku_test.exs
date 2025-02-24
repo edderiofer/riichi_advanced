@@ -1,11 +1,9 @@
-defmodule RiichiAdvanced.YakuTest.Riichi do
+defmodule RiichiAdvanced.YakuTest.RiichiYaku do
   use ExUnit.Case, async: true
   alias RiichiAdvanced.TestUtils, as: TestUtils
 
-  # TODO local yaku lol
-
   test "riichi - double riichi ippatsu" do
-    TestUtils.test_yaku_advanced("riichi", ["yaku/riichi", "yaku/ippatsu"], """
+    TestUtils.test_yaku_advanced("riichi", [%{name: "yaku/riichi", config: %{"bet" => 1000, "drawless" => false}}, "yaku/ippatsu"], """
     {
       "starting_hand": {
         "east": ["2m", "3m", "4m", "4m", "5m", "6m", "7p", "7p", "7p", "8s", "8s", "8s", "6p"],

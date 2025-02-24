@@ -12,6 +12,7 @@ defmodule RiichiAdvanced.Application do
       # RiichiAdvanced.Repo,
       {Registry, keys: :unique, name: :game_registry},
       RiichiAdvanced.ETSCache,
+      {RiichiAdvanced.Cache, []},
       Supervisor.child_spec({RiichiAdvanced.SessionSupervisor, name: RiichiAdvanced.GameSessionSupervisor}, id: :game_session_supervisor),
       Supervisor.child_spec({RiichiAdvanced.SessionSupervisor, name: RiichiAdvanced.LobbySessionSupervisor}, id: :lobby_session_supervisor),
       Supervisor.child_spec({RiichiAdvanced.SessionSupervisor, name: RiichiAdvanced.RoomSessionSupervisor}, id: :room_session_supervisor),
@@ -22,8 +23,11 @@ defmodule RiichiAdvanced.Application do
       # {Finch, name: RiichiAdvanced.Finch},
       # Start a worker by calling: RiichiAdvanced.Worker.start_link(arg)
       # {RiichiAdvanced.Worker, arg},
+      # storage for plug-attack
+      {PlugAttack.Storage.Ets, name: RiichiAdvancedWeb.PlugAttack.Storage, clean_period: 60_000},
       # Start to serve requests, typically the last entry
-      RiichiAdvancedWeb.Endpoint
+      RiichiAdvancedWeb.Endpoint,
+      RiichiAdvanced.Admin
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

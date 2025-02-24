@@ -1,6 +1,8 @@
 defmodule RiichiAdvanced.Utils do
   alias RiichiAdvanced.Constants, as: Constants
   alias RiichiAdvanced.GameState.TileBehavior, as: TileBehavior
+  alias RiichiAdvanced.Riichi, as: Riichi
+  use Nebulex.Caching
 
   def to_tile(tile_spec) do
     case tile_spec do
@@ -65,8 +67,11 @@ defmodule RiichiAdvanced.Utils do
   end
 
   def has_attr?(tile, attrs) do
+    attrs = Enum.map(attrs, &String.replace_prefix(&1, "_", ""))
     case tile do
-      {_tile, existing_attrs} -> Enum.all?(attrs, & &1 in existing_attrs)
+      {_tile, existing_attrs} ->
+        existing_attrs = Enum.map(existing_attrs, &String.replace_prefix(&1, "_", ""))
+        Enum.all?(attrs, & &1 in existing_attrs)
       _ when is_list(tile) -> Enum.any?(tile, &has_attr?(&1, attrs))
       _ when is_struct(tile, MapSet) -> MapSet.new(tile, &has_attr?(&1, attrs))
       _ -> Enum.empty?(attrs)
@@ -104,7 +109,8 @@ defmodule RiichiAdvanced.Utils do
 
   # find all jokers that map to the same tile(s) as the given one
   # together with the tile(s) they are connected by
-  def _apply_tile_aliases(tile, tile_behavior) do
+  @decorate cacheable(cache: RiichiAdvanced.Cache, key: {:apply_tile_aliases, tile, TileBehavior.hash(tile_behavior)})
+  def apply_tile_aliases(tile, tile_behavior) do
     if is_list(tile) or is_struct(tile, MapSet) do
       Enum.map(tile, &apply_tile_aliases(&1, tile_behavior))
       |> Enum.reduce(MapSet.new(), &MapSet.union/2)
@@ -125,15 +131,6 @@ defmodule RiichiAdvanced.Utils do
       end |> Enum.reduce(MapSet.new([tile | any_tiles]), &MapSet.union/2)
     end
   end
-  def apply_tile_aliases(tile, tile_behavior) do
-    case RiichiAdvanced.ETSCache.get({:apply_tile_aliases, tile, TileBehavior.hash(tile_behavior)}) do
-      [] -> 
-        result = _apply_tile_aliases(tile, tile_behavior)
-        RiichiAdvanced.ETSCache.put({:apply_tile_aliases, tile, TileBehavior.hash(tile_behavior)}, result)
-        result
-      [result] -> result
-    end
-  end
 
   # tile1 must have at least the attributes of tile2 (or any of its aliases)
   def same_tile(tile1, tile2) do
@@ -142,23 +139,20 @@ defmodule RiichiAdvanced.Utils do
     same_id = t1 == t2
            or (t2 == :faceup and t1 not in [:"1x", :"2x", :"3x", :"4x"])
            or :any in [t1, t2]
-    attrs_match = has_attr?(tile1, attrs2)
+    attrs_match = has_attr?(tile1, Enum.reject(attrs2, &String.starts_with?(&1, "_")))
     same_id and attrs_match
   end
+  def same_tile(tile1, tile2, tile_behavior) when tile_behavior.aliases == %{}, do: same_tile(tile1, tile2)
   def same_tile(tile1, tile2, tile_behavior) do
-    if Enum.empty?(tile_behavior.aliases) do
-      same_tile(tile1, tile2)
-    else
-      t1 = strip_attrs(tile1)
-      {t2, attrs2} = to_attr_tile(tile2)
-      l1 = strip_attrs(apply_tile_aliases(tile1, tile_behavior))
-      l2 = strip_attrs(apply_tile_aliases(tile2, tile_behavior))
-      same_id = t1 in l2 or t2 in l1
+    t1 = strip_attrs(tile1)
+    {t2, attrs2} = to_attr_tile(tile2)
+    l1 = strip_attrs(apply_tile_aliases(tile1, tile_behavior))
+    l2 = strip_attrs(apply_tile_aliases(tile2, tile_behavior))
+    same_id = t1 in l2 or t2 in l1
       or (:faceup in l2 and Enum.any?(l1, fn tile -> tile not in [:"1x", :"2x", :"3x", :"4x"] end))
       or :any in l1 or :any in l2
-      attrs_match = has_attr?(tile1, attrs2)
-      same_id and attrs_match
-    end
+    attrs_match = has_attr?(tile1, attrs2)
+    same_id and attrs_match
   end
 
   def to_manzu(tile) do
@@ -244,8 +238,24 @@ defmodule RiichiAdvanced.Utils do
     end
   end
 
+
+  def to_registry_name(name, id) do
+    name <> "-" <> id
+  end
   def to_registry_name(name, ruleset, room_code) do
     name <> "-" <> ruleset <> "-" <> room_code
+  end
+  def via_registry(name, ruleset) do
+    {:via, Registry, {:game_registry, to_registry_name(name, ruleset)}}
+  end
+  def via_registry(name, ruleset, room_code) do
+    {:via, Registry, {:game_registry, to_registry_name(name, ruleset, room_code)}}
+  end
+  def registry_lookup(name, ruleset) do
+    Registry.lookup(:game_registry, to_registry_name(name, ruleset))
+  end
+  def registry_lookup(name, ruleset, room_code) do
+    Registry.lookup(:game_registry, to_registry_name(name, ruleset, room_code))
   end
 
   def try_integer(value) do
@@ -259,7 +269,12 @@ defmodule RiichiAdvanced.Utils do
     -Integer.floor_div(-nominal, 2) * 100
   end
 
-  @valid_tile_colors ["red", "blue", "cyan", "gold", "orange", "yellow", "green", "purple", "gray", "grey", "lightgray", "black", "white"]
+  @valid_tile_colors [
+    "red", "blue", "cyan", "gold",
+    "orange", "yellow", "green", "lightblue", "purple",
+    "gray", "grey", "lightgray", "lightgrey",
+    "brown", "pink", "black", "white", "rainbow"
+  ]
 
   def get_tile_class(tile, i \\ -1, assigns \\ %{}, extra_classes \\ [], animate_played \\ false) do
     id = strip_attrs(tile)
@@ -275,6 +290,21 @@ defmodule RiichiAdvanced.Utils do
     sideways = i == Map.get(assigns, :riichi_index, nil) or has_attr?(tile, ["sideways"])
     just_played = Map.get(assigns, :just_discarded?, false) and Map.has_key?(assigns, :pond) and i == length(assigns.pond) - 1
     riichi = Map.has_key?(assigns, :riichi_index) and i == assigns.riichi_index
+    number_class = case Riichi.to_num(tile) do
+      1 -> ["one"]
+      2 -> ["two"]
+      3 -> ["three"]
+      4 -> ["four"]
+      5 -> ["five"]
+      6 -> ["six"]
+      7 -> ["seven"]
+      8 -> ["eight"]
+      9 -> ["nine"]
+      10 -> ["ten"]
+      _  ->
+        letter = Riichi.to_letter(tile)
+        if letter != nil do [letter] else [] end
+    end
     color_classes = Enum.filter(@valid_tile_colors, &has_attr?(tile, [&1]))
     [
       "tile", id,
@@ -289,7 +319,7 @@ defmodule RiichiAdvanced.Utils do
       sideways && "sideways",
       just_played && "just-played",
       riichi && "sideways",
-    ] ++ extra_classes ++ color_classes
+    ] ++ extra_classes ++ number_class ++ color_classes
   end
 
   def flip_faceup(tile) do
@@ -353,7 +383,7 @@ defmodule RiichiAdvanced.Utils do
   @pon_like_calls ["pon", "daiminkan", "kakan", "ankan", "am_pung", "am_kong", "am_quint"]
   def replace_jokers_in_calls(calls, joker_tiles, tile_behavior) do
     Enum.map(calls, fn {name, call} ->
-      if name in @pon_like_calls and Enum.any?(call, &has_matching_tile?([&1], joker_tiles, tile_behavior)) do
+      if name in @pon_like_calls and Enum.any?(call, &has_matching_tile?([&1], joker_tiles)) do
         meld_tile = get_joker_meld_tile({name, call}, joker_tiles, tile_behavior)
         {name, Enum.map(call, &replace_base_tile(&1, meld_tile))}
       else {name, call} end
@@ -417,4 +447,35 @@ defmodule RiichiAdvanced.Utils do
       end
     end)
   end
+
+  @decorate cacheable(cache: RiichiAdvanced.Cache, key: {:inverse_frequencies, visible_tiles, TileBehavior.hash(tile_behavior)})
+  def inverse_frequencies(visible_tiles, tile_behavior) do
+    freqs = if is_map(visible_tiles) do visible_tiles else
+      # keep only attrs that appear in the original wall before taking frequencies
+      valid_attrs = Map.keys(tile_behavior.tile_freqs)
+      |> Enum.map(fn tile ->
+        {_, attrs} = to_attr_tile(tile)
+        MapSet.new(attrs)
+      end)
+      |> Enum.reduce(MapSet.new(), &MapSet.union/2)
+      visible_tiles
+      |> Enum.map(fn tile -> 
+        {tile, attrs} = to_attr_tile(tile)
+        add_attr(tile, Enum.filter(attrs, & &1 in valid_attrs))
+      end)
+      |> Enum.frequencies()
+    end
+    Map.merge(tile_behavior.tile_freqs, freqs, fn _k, l, r -> l - r end)
+    |> Enum.filter(fn {_tile, freq} -> freq > 0 end)
+    |> Map.new()
+  end
+
+  # why is this not builtin
+  def _split_on([], _delim, acc, ret), do: [acc | ret]
+  def _split_on([x | xs], delim, acc, ret) when x == delim, do: _split_on(xs, delim, [], [acc | ret])
+  def _split_on([x | xs], delim, acc, ret), do: _split_on(xs, delim, [x | acc], ret)
+  def split_on(xs, delim), do: _split_on(Enum.reverse(xs), delim, [], [])
+
+  @css_color_regex ~r/^#[a-fA-F0-9]{6}$|^#[a-fA-F0-9]{3}$|^rgb\(\d{1,3},\s*\d{1,3},\s*\d{1,3}\)$|^rgba\(\d{1,3},\s*\d{1,3},\s*\d{1,3},\s*[\d.]+\)$|^[a-zA-Z]+$/
+  def css_color_regex, do: @css_color_regex
 end

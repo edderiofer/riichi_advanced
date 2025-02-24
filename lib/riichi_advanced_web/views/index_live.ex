@@ -98,7 +98,7 @@ defmodule RiichiAdvancedWeb.IndexLive do
         socket = if length(socket.assigns.room_code) == 3 do
           # enter private room, or create a new room
           room_code = Enum.join(socket.assigns.room_code, ",")
-          push_navigate(socket, to: ~p"/room/#{ruleset}/#{room_code}?nickname=#{nickname}")
+          push_navigate(socket, to: ~p"/room/#{ruleset}/#{room_code}?nickname=#{nickname}&from=home")
         else socket end
         {:noreply, socket}
       else
@@ -110,7 +110,7 @@ defmodule RiichiAdvancedWeb.IndexLive do
         # check if there are any public rooms of this ruleset
         # if not, skip the lobby and go directly to making a new table
         has_public_room = Enum.any?(room_codes, fn room_code -> 
-          [{room_state_pid, _}] = Registry.lookup(:game_registry, Utils.to_registry_name("room_state", ruleset, room_code))
+          [{room_state_pid, _}] = Utils.registry_lookup("room_state", ruleset, room_code)
           room_state = GenServer.call(room_state_pid, :get_state)
           not room_state.private
         end)
@@ -118,7 +118,7 @@ defmodule RiichiAdvancedWeb.IndexLive do
           push_navigate(socket, to: ~p"/lobby/#{ruleset}?nickname=#{nickname}")
         else
           {:ok, _, room_code} = LobbyState.create_room(%Lobby{ruleset: ruleset})
-          push_navigate(socket, to: ~p"/room/#{ruleset}/#{room_code}?nickname=#{nickname}")
+          push_navigate(socket, to: ~p"/room/#{ruleset}/#{room_code}?nickname=#{nickname}&from=home")
         end
         {:noreply, socket}
       end
