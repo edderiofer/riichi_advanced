@@ -1,3 +1,5 @@
+# TODO: gotta fix some stuff so this doesn't break other 4ma mods (see what the sanma mod does for examples)
+
 # add flowers
 .wall += ["1f", "2f", "3f", "4f"]
 |
