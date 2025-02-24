@@ -82,6 +82,7 @@
     {"id": "kin", "order": 3, "deps": ["aka"], "conflicts": ["its_all_aka"], "name": "Kin", "config": [{"type": "dropdown", "name": "man", "values": [0,1,2,3,4], "default": 1}, {"type": "dropdown", "name": "pin", "values": [0,1,2,3,4], "default": 1}, {"type": "dropdown", "name": "sou", "values": [0,1,2,3,4], "default": 1}], "desc": "Enables kin dora (gold fives), worth 3 han each."},
     {"id": "its_all_aka", "order": 3, "deps": ["aka"], "conflicts": ["chinitsu", "ao", "kin"], "order": 3, "name": "It's All Aka?", "desc": "Changes all standard tiles to aka."},
     {"id": "shiny_dora", "order": 4, "deps": ["dora"], "name": "Shiny Dora", "desc": "Make dora display shiny."},
+    {"id": "kansai_4ma_flowers", "order": 4, "name": "Kansai Flowers", "desc": "Four flowers are added to the game and act as nukidora."},
     "Jokers",
     {"id": "jokers/manzu", "conflicts": ["jokers/vietnamese"], "name": "Manzu", "desc": "Adds a single manzu joker to the game. The manzu joker looks like 萬 and can represent any character tile."},
     {"id": "jokers/pinzu", "conflicts": ["jokers/vietnamese"], "name": "Pinzu", "desc": "Adds a single pinzu joker to the game. The pinzu joker looks like 筒 and can represent any character tile."},
