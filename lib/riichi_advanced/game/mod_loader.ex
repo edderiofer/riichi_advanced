@@ -1,108 +1,63 @@
 defmodule RiichiAdvanced.ModLoader do
+  alias RiichiAdvanced.Constants, as: Constants
   alias RiichiAdvanced.GameState.Debug, as: Debug
 
-  defp mod_names_to_array(mod_names) do
-    "[" <> Enum.join(Enum.map(mod_names, &"\"#{&1}\""), ", ") <> "]"
+  def get_mod_name(mod) do
+    case mod do
+      %{name: name} -> name
+      name -> name
+    end
   end
 
-  def apply_single_mod(mod_name, ruleset_json) do
-    # apply mods
-    query_path = Application.app_dir(:riichi_advanced, "/priv/static/mods/#{mod_name <> ".jq"}")
-    IO.puts("Applying mod #{mod_name}")
-    ruleset_json = JQ.query_string!(ruleset_json, query_path)
-    ruleset_json
+  def read_mod(mod) do
+    case mod do
+      %{name: name, config: config} -> 
+        mod_contents = File.read!(Application.app_dir(:riichi_advanced, "/priv/static/mods/#{name <> ".jq"}"))
+        config_queries = for {key, val} <- config, is_integer(val) or is_boolean(val) or is_binary(val), do: "(#{inspect(val)}) as $#{key}\n|\n"
+        Enum.join(config_queries) <> mod_contents
+      name -> File.read!(Application.app_dir(:riichi_advanced, "/priv/static/mods/#{name <> ".jq"}"))
+    end
   end
 
-  def apply_multiple_mods(ruleset_json, mod_names) do
-    mod_contents = mod_names
-    |> Enum.map(&File.read!(Application.app_dir(:riichi_advanced, "/priv/static/mods/#{&1 <> ".jq"}")))
+  def apply_multiple_mods(ruleset_json, mods) do
+    mod_contents = mods
+    |> Enum.map(&read_mod/1)
     |> Enum.map(&String.trim/1)
     |> Enum.map_join(&" | (#{&1}\n) as $_result\n|\n$_result")
-    |> then(&".enabled_mods += #{mod_names_to_array(mod_names)}"<>&1)
-    # IO.puts(mod_contents)
+    |> then(&".enabled_mods += #{Jason.encode!(mods)}"<>&1)
 
     if Debug.print_mods() do
-      IO.puts("Applying mods [#{Enum.join(mod_names, ", ")}]")
+      IO.puts("Applying mods [#{Enum.map_join(mods, ", ", &inspect/1)}]")
     end
     JQ.query_string_with_string!(ruleset_json, mod_contents)
   end
 
-  def apply_mods(ruleset_json, mod_names, ruleset) do
-    case RiichiAdvanced.ETSCache.get({ruleset, mod_names}, [], :cache_mods) do
+  def apply_mods(ruleset_json, mods, ruleset) do
+    orig_mods = mods
+    mods = Enum.uniq(mods)
+    if length(mods) < length(orig_mods) do
+      IO.puts("Warning, the following mods were included twice: #{inspect(orig_mods -- mods)}")
+    end
+    case RiichiAdvanced.ETSCache.get({ruleset, mods}, [], :cache_mods) do
       [modded_json] ->
-        IO.puts("Using cached mods for ruleset #{ruleset}: #{inspect(mod_names)}")
+        IO.puts("Using cached mods for ruleset #{ruleset}: #{inspect(mods)}")
         modded_json
       []     -> 
         # apply the mods
-        # modded_json = Enum.reduce(mod_names, ruleset_json, &apply_mod/2)
-        modded_json = apply_multiple_mods(ruleset_json, mod_names)
+        # modded_json = Enum.reduce(mods, ruleset_json, &apply_mod/2)
+        modded_json = apply_multiple_mods(ruleset_json, mods)
 
+        if Debug.print_mods() do
+          IO.puts("Loading #{ruleset}: [\n  #{Enum.map_join(mods, ",\n  ", &Jason.encode!/1)}\n]")
+        end
+        
         if not Debug.skip_ruleset_caching() do
-          RiichiAdvanced.ETSCache.put({ruleset, mod_names}, modded_json, :cache_mods)
+          RiichiAdvanced.ETSCache.put({ruleset, mods}, modded_json, :cache_mods)
         end
 
         modded_json
     end
   end
-
-  @modpacks %{
-    "sanma" => %{
-      display_name: "Sanma",
-      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/sanma.md",
-      ruleset: "riichi",
-      mods: ["sanma"],
-      default_mods: [],
-    },
-    "cosmic" => %{
-      display_name: "Cosmic Riichi",
-      tutorial_link: "https://docs.google.com/document/d/1F-NhQ5fdi5CnAyEqwNE_qWR0Og99NtCo2NGkvBc5EwU/edit",
-      ruleset: "riichi",
-      mods: ["cosmic_base"],
-      default_mods: ["cosmic", "space", "kontsu", "yaku/kontsu_yaku", "yaku/chanfuun", "yaku/fuunburi", "yaku/uumensai_cosmic", "cosmic_calls", "yakuman_13_han", "yaku/tsubame_gaeshi", "yaku/kanburi", "yaku/uumensai", "yaku/isshoku_sanjun", "yaku/isshoku_yonjun"],
-    },
-    "nojokersmahjongleague" => %{
-      display_name: "No Jokers Mahjong League 2024",
-      tutorial_link: "https://docs.google.com/document/d/1APpd-YBnsKKssGmyLQiCp90Wk-06SlIScV1sKpJUbQo/edit?usp=sharing",
-      ruleset: "riichi",
-      mods: ["nojokersmahjongleague", "kiriage_mangan", "agarirenchan", "tenpairenchan", "dora", "ura", "kandora", "yaku/ippatsu", "tobi", "immediate_kan_dora", "head_bump", "no_double_yakuman"],
-      default_mods: ["show_waits"],
-    },
-    "space" => %{
-      display_name: "Space Mahjong",
-      tutorial_link: "https://riichi.wiki/Space_mahjong",
-      ruleset: "riichi",
-      mods: [],
-      default_mods: ["space"],
-    },
-    "galaxy" => %{
-      display_name: "Galaxy Mahjong",
-      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/galaxy.md",
-      ruleset: "riichi",
-      mods: [],
-      default_mods: ["galaxy"],
-    },
-    "chinitsu" => %{
-      display_name: "Chinitsu Challenge",
-      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/chinitsu_challenge.md",
-      ruleset: "riichi",
-      mods: ["chinitsu_challenge"],
-      default_mods: ["chombo", "tobi", "yaku/renhou_yakuman", "no_honors"],
-    },
-    "minefield" => %{
-      display_name: "Minefield",
-      tutorial_link: "https://riichi.wiki/Minefield_mahjong",
-      ruleset: "riichi",
-      mods: ["minefield"],
-      default_mods: ["kiriage_mangan"],
-    },
-    "kansai" => %{
-      display_name: "Kansai Sanma",
-      tutorial_link: "https://github.com/EpicOrange/riichi_advanced/blob/main/documentation/kansai.md",
-      ruleset: "riichi",
-      mods: ["sanma", "dora", "aka", "nagashi", "kansai"],
-      default_mods: ["tobi"],
-    }
-  }
 
   defp read_ruleset_json(ruleset) do
     case File.read(Application.app_dir(:riichi_advanced, "/priv/static/rulesets/#{ruleset}.json")) do
@@ -118,16 +73,17 @@ defmodule RiichiAdvanced.ModLoader do
         _ -> "{}"
       end
     else
-      if Map.has_key?(@modpacks, ruleset) do
-        modpack = @modpacks[ruleset]
-        mod_names = Map.get(modpack, :mods, [])
+      modpacks = Constants.modpacks()
+      if Map.has_key?(modpacks, ruleset) do
+        modpack = modpacks[ruleset]
+        mods = Map.get(modpack, :mods, [])
         display_name = Map.get(modpack, :display_name, ruleset)
-        query = ".default_mods += #{mod_names_to_array(Map.get(modpack, :default_mods, []))} | .display_name = \"#{display_name}\""
+        query = ".default_mods += #{Jason.encode!(Map.get(modpack, :default_mods, []))} | .display_name = \"#{display_name}\""
         query = query <> " | " <> if Map.has_key?(modpack, :tutorial_link) do ".tutorial_link = \"#{modpack.tutorial_link}\"" else "del(.tutorial_link)" end
         modpack.ruleset
         |> read_ruleset_json()
         |> strip_comments()
-        |> apply_mods(mod_names, modpack.ruleset)
+        |> apply_mods(mods, modpack.ruleset)
         |> JQ.query_string_with_string!(query)
       else
         ruleset_json = read_ruleset_json(ruleset)

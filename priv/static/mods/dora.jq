@@ -1,11 +1,12 @@
+.after_initialization.actions += [["add_rule", "Dora", "At the beginning of the game, \($start_indicators) dora indicators are revealed in the dead wall. The tile next in sequence to a dora indicator is considered dora, and each copy of dora in hand is worth 1 extra han. For winds, the sequence is East, South, West, North. For dragons, the sequence is White, Green, Red."]]
+|
 .max_revealed_tiles = 5
 |
 # initial dora flip
-
 if .num_players == 3 then
-  .revealed_tiles += [-10]
+  .revealed_tiles += [-10, -12, -14, -16, -18][:$start_indicators]
 else
-  .revealed_tiles += [-6]
+  .revealed_tiles += [-6, -8, -10, -12, -14][:$start_indicators]
 end
 |
 # dora indicator map
@@ -19,7 +20,6 @@ end
   "7m": ["8m"],
   "8m": ["9m"],
   "9m": ["1m"],
-  "0m": ["6m"],
   "1p": ["2p"],
   "2p": ["3p"],
   "3p": ["4p"],
@@ -29,7 +29,6 @@ end
   "7p": ["8p"],
   "8p": ["9p"],
   "9p": ["1p"],
-  "0p": ["6p"],
   "1s": ["2s"],
   "2s": ["3s"],
   "3s": ["4s"],
@@ -39,7 +38,6 @@ end
   "7s": ["8s"],
   "8s": ["9s"],
   "9s": ["1s"],
-  "0s": ["6s"],
   "1z": ["2z"],
   "2z": ["3z"],
   "3z": ["4z"],
@@ -53,26 +51,22 @@ if .num_players == 3 then
   .dora_indicators["1m"] = ["9m"]
 else . end
 |
-# count dora
-.before_win.actions += [
-  ["when", [{"name": "tile_revealed", "opts": [-6]}], [["add_counter", "dora", "count_dora", -6, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-8]}], [["add_counter", "dora", "count_dora", -8, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-10]}], [["add_counter", "dora", "count_dora", -10, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-12]}], [["add_counter", "dora", "count_dora", -12, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-14]}], [["add_counter", "dora", "count_dora", -14, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-16]}], [["add_counter", "dora", "count_dora", -16, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-18]}], [["add_counter", "dora", "count_dora", -18, ["hand", "calls", "flowers", "winning_tile"]]]]
+# $last_tile parameter is for minefield
+.functions.calculate_dora = [
+  ["set_counter", "dora", 0],
+  ["when", [{"name": "tile_revealed", "opts": [-6]}], [["add_counter", "dora", "count_dora", -6, ["hand", "calls", "flowers", "$last_tile"]]]],
+  ["when", [{"name": "tile_revealed", "opts": [-8]}], [["add_counter", "dora", "count_dora", -8, ["hand", "calls", "flowers", "$last_tile"]]]],
+  ["when", [{"name": "tile_revealed", "opts": [-10]}], [["add_counter", "dora", "count_dora", -10, ["hand", "calls", "flowers", "$last_tile"]]]],
+  ["when", [{"name": "tile_revealed", "opts": [-12]}], [["add_counter", "dora", "count_dora", -12, ["hand", "calls", "flowers", "$last_tile"]]]],
+  ["when", [{"name": "tile_revealed", "opts": [-14]}], [["add_counter", "dora", "count_dora", -14, ["hand", "calls", "flowers", "$last_tile"]]]],
+  ["when", [{"name": "tile_revealed", "opts": [-16]}], [["add_counter", "dora", "count_dora", -16, ["hand", "calls", "flowers", "$last_tile"]]]],
+  ["when", [{"name": "tile_revealed", "opts": [-18]}], [["add_counter", "dora", "count_dora", -18, ["hand", "calls", "flowers", "$last_tile"]]]]
 ]
 |
-.before_scoring.actions |= [["set_counter", "dora", 0]] + . + [
-  ["when", [{"name": "tile_revealed", "opts": [-6]}], [["add_counter", "dora", "count_dora", -6, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-8]}], [["add_counter", "dora", "count_dora", -8, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-10]}], [["add_counter", "dora", "count_dora", -10, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-12]}], [["add_counter", "dora", "count_dora", -12, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-14]}], [["add_counter", "dora", "count_dora", -14, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-16]}], [["add_counter", "dora", "count_dora", -16, ["hand", "calls", "flowers", "winning_tile"]]]],
-  ["when", [{"name": "tile_revealed", "opts": [-18]}], [["add_counter", "dora", "count_dora", -18, ["hand", "calls", "flowers", "winning_tile"]]]]
-]
+# count dora
+.before_win.actions += [["run", "calculate_dora", {"last_tile": "winning_tile"}]]
+|
+.before_scoring.actions += [["run", "calculate_dora", {"last_tile": "winning_tile"}]]
 |
 # add dora yaku
 .extra_yaku += [
@@ -80,6 +74,4 @@ else . end
 ]
 |
 # tag dora with dora tag
-.after_start.actions += [
-  ["tag_dora", "dora", -6]
-]
+.after_start.actions += (.revealed_tiles | map(["tag_dora", "dora", .]))
