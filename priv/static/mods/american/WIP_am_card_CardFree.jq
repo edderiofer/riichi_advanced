@@ -23,41 +23,94 @@
       # should be an OR of the following:
       [
         # Any Like Numbers
-        ["XX0a XX0b XX0c",
-        "XX0a XX0b XXX0c",
-        "XX0a XX0b XXXX0c",
-        "XX0a XX0b XXXXX0c",
-        "XX0a XXX0b XXX0c",
-        "XX0a XXXX0b XXXX0c",
-        "XX0a XXXXX0b XXXXX0c",
-        "XXX0a XXX0b XXX0c",
-        "XXX0a XXX0b XXXX0c",
-        "XXX0a XXX0b XXXXX0c",
-        "XXX0a XXXX0b XXXX0c",
-        "XXXX0a XXXX0b XXXX0c",
-        "XXXX0a XXXXX0b XXXXX0c"],
+        ["XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b XX0c|XXX0c|XXXX0c|XXXXX0c"],
         [
-          #TODO: add some kind of constraint that bans unlike number tiles
+          #TODO: add some kind of constraint that bans unlike number tiles and winds
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX2a|XXX2a|XXXX2a|XXXXX2a|XX3a|XXX3a|XXXX3a|XXXXX3a|etc."
+          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
         ]
       ],
       [
-        # Winds
-        # TODO: add this one
+        # Winds NEWS
+        ["NN|NNN|NNNN|NNNNN EE|EEE|EEEE|EEEEE WW|WWW|WWWW|WWWWW SS|SSS|SSSS|SSSSS"],
+        [
+          #TODO: add some kind of constraint that bans extra winds and numbers
+          # NOT ????
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a"
+        ]
       ],
       [
-        # the other ones
-        # TODO: add this one
+        # Winds NS
+        ["NN|NNN|NNNN|NNNNN SS|SSS|SSSS|SSSSS"],
         [
-          # categories
-          # TODO: add this one
-        ],
+          #TODO: add some kind of constraint that bans extra Es and Ws and numbers
+          # NOT "EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW"
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a"
+        ]
+      ],
+      [
+        # Winds EW
+        ["EE|EEE|EEEE|EEEEE WW|WWW|WWWW|WWWWW"],
         [
-          # no duplicate number/wind restriction
-          # TODO: add this one
-        ],
+          #TODO: add some kind of constraint that bans extra Es and Ws and numbers
+          # NOT "NN|NNN|NNNN|NNNNN|SS|SSS|SSSS|SSSSS"
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a"
+        ]
+      ],
+      [
+        # 369
+        ["33a|333a|3333a|33333a"],
+        ["66a|666a|6666a|66666a"],
+        ["99a|999a|9999a|99999a"],
+        [
+          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX2a|XXX2a|XXXX2a|XXXXX2a"
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b"
+          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
+        ]
+      ],
+      [
+        # 2468
+        ["44a|444a|4444a|44444a"],
+        ["66a|666a|6666a|66666a"],
+        ["22a|222a|2222a|22222a|88a|888a|8888a|88888a"],
+        [
+          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX3a|XXX3a|XXXX3a|XXXXX3a"
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b"
+          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
+        ]
+      ],
+      [
+        # 13579
+        ["55a|555a|5555a|55555a"],
+        [
+          ["11a|111a|1111a|11111a 33a|333a|3333a|33333a"],
+          ["33a|333a|3333a|33333a 77a|777a|7777a|77777a"],
+          ["77a|777a|7777a|77777a 99a|999a|9999a|99999a"],
+        ], #either you have 1&3, or you have 3&7, or you have 7&9
+        [
+          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX3a|XXX3a|XXXX3a|XXXXX3a"
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b"
+          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
+          #TODO: add some kind of constraint that bans 1359 and 1579 w/o 7 and 3 resp.
+          # ?????
+        ]
+      ],
+      [
+        # Consecutive Run
+        # time to add 22 cases! what fun! 😭
+        [
+          #TODO: add 22 cases here
+        ], 
+        [
+          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
+          # NOT ?????
+          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b" (bans like numbers)
+          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
+        ]
       ]
-      # TODO: add this bit
-      # dunno yet lol
     ],
       # PATTERN OF BLOCKS
     [
@@ -70,6 +123,11 @@
       [[["am_pung", "am_dragon_pung"], 3], [["am_quint"], 1]],
       [[["am_kong", "am_news_kong"], 1], [["am_quint"], 2]],
       [[["am_pung", "am_dragon_pung"], 2], [["am_kong", "am_news_kong"], 2]]
+    ],
+      # NO DUPLICATE FLOWER/DRAGON BLOCKS
+    [
+      # NOT "DDa|DDDa|DDDDa|DDDDDa DDa|DDDa|DDDDa|DDDDDa" (bans like dragon blocks)
+      # NOT "FF|FFF|FFFF|FFFFF FF|FFF|FFFF|FFFFF" (bans like flower blocks)
     ]
   ],
   [["am_dragons_love", "am_dragons_wings", "am_dragons_breath"], 1]
