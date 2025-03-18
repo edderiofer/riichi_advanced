@@ -134,6 +134,7 @@ defmodule RiichiAdvancedWeb.GameLive do
         dead_hand?={"dead_hand" in @state.players[seat].status}
         play_tile={&send(self(), {:play_tile, &1})}
         mark_tile={&send(self(), {:mark_tile, &1, &2})}
+        unmark_tile={&send(self(), {:unmark_tile, &1, &2})}
         hover={&send(self(), {:hover, &1})}
         hover_off={fn -> send(self(), :hover_off) end}
         reindex_hand={&send(self(), {:reindex_hand, &1, &2})}
@@ -215,9 +216,9 @@ defmodule RiichiAdvancedWeb.GameLive do
           <% end %>
         </div>
         <div class="auto-buttons">
-          <%= for {name, desc, checked} <- @state.players[@seat].auto_buttons do %>
+          <%= for {{name, desc, checked}, i} <- Enum.with_index(@state.players[@seat].auto_buttons) do %>
             <input id={"auto-button-" <> name} type="checkbox" class="auto-button" phx-click="auto_button_toggled" phx-value-name={name} phx-value-enabled={if checked do "true" else "false" end} checked={checked}>
-            <label for={"auto-button-" <> name} title={desc}><%= @state.rules["auto_buttons"][name]["display_name"] %></label>
+            <label for={"auto-button-" <> name} title={desc} data-name={@state.rules["auto_buttons"][name]["display_name"]} tabindex={i}><%= @state.rules["auto_buttons"][name]["display_name"] %></label>
           <% end %>
         </div>
         <div class="call-buttons-container">
@@ -353,20 +354,25 @@ defmodule RiichiAdvancedWeb.GameLive do
           display_honba={@display_honba} />
         <.live_component module={RiichiAdvancedWeb.MenuButtonsComponent} id="menu-buttons" log_button={true} />
       </div>
-      <%= if not Enum.empty?(@state.rules_text) do %>
-        <input id="rules-popover-checkbox" type="checkbox" class="rules-popover-checkbox" phx-update="ignore">
-        <label for="rules-popover-checkbox">Rules</label>
-        <div class="rules-popover-container"}>
-          <div class="rules-popover">
-            <%= for {title, {text, priority}} <- Enum.sort_by(@state.rules_text, fn {_title, {text, priority}} -> {priority, String.length(text)} end) do %>
-              <div class={["rules-popover-rule", priority < 0 && "full-width"]}>
-                <div class="rules-popover-title"><%= title %></div>
-                <div class="rules-popover-text"><%= text %></div>
-              </div>
-            <% end %>
+
+      <div class="rules-wrapper">
+        <%= for rules_text_name <- @state.rules_text_order, not Enum.empty?(@state.rules_text[rules_text_name]) do %>
+          <input type="radio" id={"rules-popover-radio-#{rules_text_name}"} name="rules-popover-tab" class="rules-popover-radio" phx-update="ignore">
+          <label for={"rules-popover-radio-#{rules_text_name}"}><%= rules_text_name %></label>
+          <div class="rules-popover-container">
+            <div class="rules-popover">
+              <%= for {title, {text, priority}} <- Enum.sort_by(@state.rules_text[rules_text_name], fn {_title, {text, priority}} -> {priority, String.length(text)} end) do %>
+                <div class={["rules-popover-rule", priority < 0 && "full-width"]}>
+                  <div class="rules-popover-title"><%= title %></div>
+                  <div class="rules-popover-text"><%= text %></div>
+                </div>
+              <% end %>
+            </div>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+        <input type="radio" id={"rules-popover-unselect"} name="rules-popover-tab" class="rules-popover-unselect" phx-update="ignore">
+        <label for={"rules-popover-unselect"}></label>
+      </div>
       <.live_component module={RiichiAdvancedWeb.MessagesComponent} id="messages" messages={@messages} />
       <div class="ruleset">
         <textarea readonly><%= @state.ruleset_json %></textarea>
@@ -632,14 +638,15 @@ defmodule RiichiAdvancedWeb.GameLive do
   end
 
   def handle_info({:mark_tile, index, source}, socket) do
-    if source != :hand or index == socket.assigns.selected_index do
-      GenServer.cast(socket.assigns.game_state, {:mark_tile, socket.assigns.viewer, socket.assigns.seat, index, source})
-      socket = assign(socket, :selected_index, nil)
-      {:noreply, socket}
-    else
-      socket = assign(socket, :selected_index, index)
-      {:noreply, socket}
-    end
+    GenServer.cast(socket.assigns.game_state, {:mark_tile, socket.assigns.viewer, socket.assigns.seat, index, source})
+    socket = assign(socket, :selected_index, nil)
+    {:noreply, socket}
+  end
+
+  def handle_info({:unmark_tile, index, source}, socket) do
+    GenServer.cast(socket.assigns.game_state, {:unmark_tile, socket.assigns.viewer, socket.assigns.seat, index, source})
+    socket = assign(socket, :selected_index, nil)
+    {:noreply, socket}
   end
 
   def handle_info({:hover, index}, socket) do

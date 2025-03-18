@@ -402,6 +402,8 @@ An American match specification is a `~m""` string . An example is `~m"american,
 
 The `a` at the end is a suit specifier, required for groups consisting of `1` to `9`, `D`, and/or `X`. The three suit specifiers are `a`, `b`, `c`. For example, `"2024a 2222b 2222c"` matches 2024 of one suit (0 is white dragon), 2222 or another suit, and 2222 of a third suit.
 
+In addition, you may specify a group with alternatives (OR) using `|`. For example, `RR|GG` matches a pair of red dragons OR a pair of green dragons. Since spaces are used to separate groups, make sure not to put spaces around the `|`.
+
 See `rulesets/american.json` for more examples.
 
 ## Marking
@@ -639,9 +641,10 @@ Colors are specified as CSS color strings like `"#808080"` or `"lightblue"`. Exa
 - `["noop"]`: does nothing, but you can put it in `interruptible_actions` to make it an interrupt.
 - `push_message(message, vars)`: Sends a message to all players using the current player as a label. Example: `["push_message", "declared riichi"]`. You may specify numbers (actual numbers or counter names) to interpolate into the message with `vars`. Example: `["push_message", "is on their $nth repeat", {"n": "honba"}]`.
 - `push_system_message(message, vars)`: Sends a message to all players, with no label. Example: `["push_system_message", "Converted each shuugi to 2000 points."]`
-- `add_rule(title, text, sort_order)`: Adds the string `text` to the rules tab on the left. Keep it brief! `title` is a required string identifier that is also used for deleting this rule later -- you can also specify an existing identifier to append a `text` to that rule (on its own line). `sort_order` is an optional integer argument that defaults to `0` -- the rules on the rules list are sorted from lowest `sort_order` to highest. Rules with negative `sort_order` are displayed full-width while other rules are half-width.
-- `update_rule(title, text, sort_order)`: Same as `"add_rule"`, but only appends `text` (does nothing if the rule `title` does not exist).
-- `delete_rule(title)`: Deletes the rule text identified by `title`.
+- `add_rule(tab, title, text, sort_order)`: Adds the string `text` to the corresponding rules `tab` on the left. Keep it brief! `title` is a required string identifier that is also used for deleting this rule later -- you can also specify an existing identifier to append a `text` to that rule (on its own line). `sort_order` is an optional integer argument that defaults to `0` -- the rules on the rules list are sorted from lowest `sort_order` to highest. Rules with negative `sort_order` are displayed full-width while other rules are half-width.
+- `update_rule(tab, title, text, sort_order)`: Same as `"add_rule"`, but only appends `text` (does nothing if the rule `title` does not exist).
+- `delete_rule(tab, title)`: Deletes the rule text identified by `title`.
+- `add_rule_tab(tab)`: Adds an empty rule tab. Useful if you want to predefine the order of rule tabs, since rule tabs are ordered by when they are generated. Rule tabs without any rules are not shown.
 - `run(fn_name, {"arg1": "value1", ...})`: Call the given function with the given arguments. A function is essentially a named list of actions. Functions are defined in the toplevel `"functions"` key -- see `riichi.json` for examples. Within a function you may write variables preceded with a dollar sign -- like `$arg1` -- and the value will be replaced with the corresponding `value1` in the (optional) given object. Functions can be called recursively, but this is rarely done, and therefore there is an arbitrary call stack limit of 10 calls.
 - `draw(num, tile)`: Draw `num` tiles. If `tile` is specified, it draws that tile instead of from the wall. Instead of a tile for `tile` you may instead write `"opposite_end"` to draw from the opposite end of the wall (i.e. the dead wall, if one exists)
 - `call`: For call buttons only, like pon. Triggers the call.
@@ -747,6 +750,7 @@ Colors are specified as CSS color strings like `"#808080"` or `"lightblue"`. Exa
 - `add_attr_tagged(tag, [attr1, ...])`: Add the given attributes to all instances of the tagged tiles. (includes wall)
 - `remove_attr_hand(attr1, attr2, ...)`: Remove the given attributes from all tiles in the current player's hand.
 - `remove_attr_all(attr1, attr2, ...)`: Remove the given attributes from all tiles owned by the current player (hand, draw, aside, but not calls)
+- `remove_attr_tagged(tag, [attr1, ...])`: Remove the given attributes from all instances of the tagged tiles. (includes wall)
 - `tag_tiles(tag_name, tiles)`: Globally tag the given tile(s) with the given tag name.
 - `tag_drawn_tile(tag_name)`: Globally tag the current player's drawn tile with the given tag name.
 - `tag_last_discard(tag_name)`: Globally tag the current player's last discard with the given tag name.
@@ -877,8 +881,8 @@ Prepend `"not_"` to any of the condition names to negate it.
 - `seat_is(direction)`: The current player's seat wind is the specified direction, one of `"east"`, `"south"`, `"west"`, `"north"`.
 - `winning_dora_count(dora_indicator, num)`: The current player has `num` dora tiles of the given dora indicator.
 - `match(to_match, [match_spec1, match_spec2, ...])`: See the [section on match specifications](#the-match-condition-and-match-specifications) to see how this condition works.
-- `winning_hand_consists_of(tile1, tile2, ...)`: The winning hand (excluding winning tile) contains only the given tiles (jokers allowed).
-- `winning_hand_and_tile_consists_of(tile1, tile2, ...)`: The winning hand (including winning tile) contains only the given tiles (jokers allowed).
+- `winning_hand_consists_of(tile1, tile2, ...)`: The winning hand (including winning tile) contains only the given tiles (jokers allowed).
+- `winning_hand_not_tile_consists_of(tile1, tile2, ...)`: The winning hand (excluding winning tile) contains only the given tiles (jokers allowed).
 - `all_saki_cards_drafted`: Everyone has at least one saki card.
 - `has_existing_yaku(yaku1, yaku2, ...)`: Used in `meta_yaku` only. The winner has scored all of the given yaku.
 - `has_no_yaku`: Used in `meta_yaku` only. The winner has scored no yaku.
@@ -1252,7 +1256,7 @@ Fu calculation is done by a series of manipulations described by the action list
       remove_calls
     
       # now remove the winning group
-      remove_winning_groups(
+      remove_winning_groups([
         # kanchan
         %{group: [-1, 1], value: 2},
         # penchan
@@ -1265,16 +1269,16 @@ Fu calculation is done by a series of manipulations described by the action list
         %{group: [0, 0], value: 2, yaochuuhai_mult: 2, tsumo_mult: 2},
         # tanki
         %{group: [0], value: 2, yakuhai_value: 2}
-      )
+      ])
     
       # now remove all closed groups
-      remove_groups(%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2})
-      remove_groups(%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2})
-      remove_groups(%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2})
-      remove_groups(%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2})
+      remove_groups([%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2}])
+      remove_groups([%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2}])
+      remove_groups([%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2}])
+      remove_groups([%{group: [0, 1, 2]}, %{group: [0, 0, 0], value: 4, yaochuuhai_mult: 2}])
     
       # remove final pair, if any
-      remove_groups(%{group: [0, 0], yakuhai_value: 2})
+      remove_groups([%{group: [0, 0], yakuhai_value: 2}])
     
       # only retain configurations with 0 tiles remaining
       retain_empty_hands
@@ -1289,8 +1293,8 @@ Fu calculation is done by a series of manipulations described by the action list
       add(2, won_by_draw and (minipoints_at_most(999) or not_has_no_call_named("chii", "pon", "daiminkan", "kakan")))
     
       # closed ron +10 and open pinfu ron +10
-      add(10, "not_won_by_draw" and has_no_call_named("chii", "pon", "daiminkan", "kakan"))
-      add(10, "not_won_by_draw" and not_has_no_call_named("chii", "pon", "daiminkan", "kakan") and minipoints_at_least(1000))
+      add(10, not_won_by_draw and has_no_call_named("chii", "pon", "daiminkan", "kakan"))
+      add(10, not_won_by_draw and not_has_no_call_named("chii", "pon", "daiminkan", "kakan") and minipoints_at_least(1000))
     
       # take max, then subtract 1000 from pinfu hands
       take_maximum

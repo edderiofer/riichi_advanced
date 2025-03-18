@@ -1,4 +1,4 @@
-.after_initialization.actions += [["add_rule", "Riichi", "If you can, you may discard into tenpai with riichi to lock your hand. If your discard passes, you bet 1000 points. If you win you are awarded riichi (1 han). If you declare riichi on your very first discard, then you are instead awarded double riichi (2 han). Calls invalidate double riichi."]]
+.after_initialization.actions += [["add_rule", "1 Han", "Riichi", "If you can, you may discard into tenpai with riichi to lock your hand. If your discard passes, you bet 1000 points. If you win you are awarded riichi (1 han). If you declare riichi on your very first discard, then you are instead awarded double riichi (2 han). Calls invalidate double riichi."]]
 |
 .yaku |= [
   { "display_name": "Riichi", "value": 1, "when": [{"name": "status", "opts": ["riichi"]}] },
@@ -84,15 +84,16 @@ if (.buttons | has("tsumo")) then
   .buttons.tsumo.show_when += [{"name": "status_missing", "opts": ["just_reached"]}]
 else . end
 |
-.functions.turn_cleanup |= [
-  # if we just reached then place down a riichi stick
-  ["when", [{"name": "status", "opts": ["just_reached"]}], [["as", "last_discarder", [["run", "put_down_riichi_stick"]]]]]
-] + map(if . == ["unset_status", "furiten"] then
+.functions.turn_cleanup |= map(if . == ["unset_status", "furiten"] then
   # unset furiten (unless in riichi)
   ["when", [{"name": "status_missing", "opts": ["riichi"]}], [["unset_status", "furiten"]]]
 else . end)
 |
-.functions.discard_passed |= [["as", "others", [["unset_status", "just_reached"]]]] + .
+.functions.discard_passed |= [["as", "others", [
+  # if we just reached then place down a riichi stick
+  ["when", [{"name": "status", "opts": ["just_reached"]}], [["run", "put_down_riichi_stick"]]],
+  ["unset_status", "just_reached"]
+]]] + .
 |
 .functions.put_down_riichi_stick = [
   ["when", [{"name": "status_missing", "opts": ["put_down_riichi_stick"]}], [

@@ -304,6 +304,7 @@ defmodule RiichiAdvanced.GameState.Actions do
     called_tile = case call_source do
       :discards -> Enum.at(state.players[state.turn].pond, -1)
       :hand     -> called_tile
+      :draw     -> called_tile
       _         -> IO.puts("Unhandled call_source #{inspect(call_source)}")
     end
 
@@ -328,6 +329,7 @@ defmodule RiichiAdvanced.GameState.Actions do
     {state, to_remove} = case call_source do
       :discards -> {update_player(state, state.turn, &%Player{ &1 | pond: Enum.drop(&1.pond, -1) }), call_choice}
       :hand     -> {state, if called_tile != nil do [called_tile | call_choice] else call_choice end}
+      :draw     -> {state, if called_tile != nil do [called_tile | call_choice] else call_choice end}
       _         ->
         IO.puts("Unhandled call_source #{inspect(call_source)}")
         {state, call_choice}
@@ -336,7 +338,7 @@ defmodule RiichiAdvanced.GameState.Actions do
     draw = Utils.add_attr(state.players[seat].draw, ["_hand"])
     new_hand = Match.try_remove_all_tiles(hand ++ draw, to_remove) |> Enum.at(0) |> Utils.remove_attr(["_hand", "_draw"])
     new_hand = if new_hand == nil do
-      Logger.error("Call #{call_name} on #{inspect(call_choice)} #{inspect(called_tile)} is to remove #{inspect(to_remove)} from hand #{inspect(hand)}, but none found")
+      Logger.error("trigger_call: Call #{call_name} on #{inspect(call_choice)} #{inspect(called_tile)} is to remove #{inspect(to_remove)} from hand #{inspect(hand)}, but none found")
       hand
     else new_hand end
 
@@ -511,16 +513,16 @@ defmodule RiichiAdvanced.GameState.Actions do
       ["score" | _opts] when is_map_key(context, :score) -> context.score
       ["minipoints" | _opts] when is_map_key(context, :minipoints) -> context.minipoints
       ["minipoints" | opts] ->
-        score_actions = opts
+        score_actions = Enum.at(opts, 0)
         yakuhai = Scoring.get_yakuhai(state, context.seat)
         player = state.players[context.seat]
         tile_behavior = player.tile_behavior
-        winning_tile = if Map.has_key?(context, :winning_tile) do context.winning_tile else state.winners[context.seat].winning_tile end
-        winning_tiles = Utils.apply_tile_aliases([winning_tile], tile_behavior) |> Utils.strip_attrs()
         win_source = context.win_source
+        winning_tiles = get_winning_tiles(state, context.seat, context.win_source)
+        winning_tiles = Utils.apply_tile_aliases(winning_tiles, tile_behavior) |> Utils.strip_attrs()
 
         for [action | opts] <- score_actions, reduce: [{player.hand, player.calls, 0}] do
-          hand_calls_fu -> case action do
+          hand_calls_fu -> case action do # IO.inspect(hand_calls_fu, label: action);
             "put_calls_in_hand" ->
               for {hand, calls, fu} <- hand_calls_fu do
                 {match, nomatch} = Enum.split_with(calls, fn {name, _call} -> name in opts end)
@@ -555,7 +557,7 @@ defmodule RiichiAdvanced.GameState.Actions do
                 {hand, [], fu}
               end
             "remove_winning_groups" ->
-              Enum.flat_map(opts, fn group_spec ->
+              Enum.flat_map(Enum.at(opts, 0), fn group_spec ->
                 group = Map.get(group_spec, "group", [])
                 reject_if_exists = Map.get(group_spec, "reject_if_exists", [])
                 reject_if_missing = Map.get(group_spec, "reject_if_missing", [])
@@ -584,7 +586,7 @@ defmodule RiichiAdvanced.GameState.Actions do
                 end
               end) ++ hand_calls_fu
             "remove_groups" ->
-              Enum.flat_map(opts, fn group_spec ->
+              Enum.flat_map(Enum.at(opts, 0), fn group_spec ->
                 group = Map.get(group_spec, "group", [])
                 reject_if_exists = Map.get(group_spec, "reject_if_exists", [])
                 reject_if_missing = Map.get(group_spec, "reject_if_missing", [])
@@ -751,12 +753,20 @@ defmodule RiichiAdvanced.GameState.Actions do
     end
   end
 
+  def remove_attr_tagged(tiles, attrs, tagged) do
+    for tile <- tiles do
+      if Utils.has_matching_tile?([tile], tagged) do
+        Utils.remove_attr(tile, attrs)
+      else tile end
+    end
+  end
+
   defp call_function(state, context, fn_name, args) do
     if length(state.call_stack) < 10 do
       args = Map.new(args, fn {name, value} -> {"$" <> name, value} end)
       state = Map.update!(state, :call_stack, &[[fn_name | args] | &1])
       actions = Map.get(state.rules["functions"], fn_name)
-      actions = map_action_opts(actions, &Map.get(args, &1, &1))
+      actions = Utils.walk_json(actions, &Map.get(args, &1, &1))
       if Debug.debug_actions() do
         IO.puts("Running function: #{inspect(actions)}")
       end
@@ -945,11 +955,14 @@ defmodule RiichiAdvanced.GameState.Actions do
     buttons_before = Enum.map(state.players, fn {seat, player} -> {seat, player.buttons} end)
     marked_objects = state.marking[context.seat]
     uninterruptible = String.starts_with?(action, "uninterruptible_")
-    action = if uninterruptible do String.slice(action, 16..-1//1) else action end
+    action = if uninterruptible do String.replace_leading(action, "uninterruptible_", "") else action end
     state = case action do
       "noop"                  -> state
       "print"                 ->
         IO.puts(interpolate_string(state, context, Enum.at(opts, 0, ""), Enum.at(opts, 1, %{})))
+        state
+      "inspect"               ->
+        IO.inspect(opts)
         state
       "print_status"          ->
         seat = Conditions.from_seat_spec(state, context, Enum.at(opts, 0, "self"))
@@ -962,8 +975,16 @@ defmodule RiichiAdvanced.GameState.Actions do
       "print_context"         ->
         IO.inspect(context)
         state
+      "print_discards"         ->
+        seat = Conditions.from_seat_spec(state, context, Enum.at(opts, 0, "self"))
+        IO.inspect({seat, state.players[seat].discards})
+        state
+      "print_tags"         ->
+        IO.inspect(state.tags)
+        state
       "push_message"          ->
         message = interpolate_string(state, context, Enum.at(opts, 0, ""), Enum.at(opts, 1, %{}))
+        # IO.inspect(["Player #{player_name(state, context.seat)}", message], label: "Sent message")
         push_message(state, Enum.map(["Player #{player_name(state, context.seat)}", message], &%{text: &1}))
         state
       "push_system_message"   ->
@@ -971,20 +992,37 @@ defmodule RiichiAdvanced.GameState.Actions do
         push_message(state, [%{text: message}])
         state
       "add_rule"             ->
-        id = Enum.at(opts, 0, "")
-        text = Enum.at(opts, 1, "")
-        priority = Enum.at(opts, 2, nil)
-        update_in(state.rules_text, &Map.update(&1, id, {text, if priority == nil do 0 else priority end}, fn {orig_text, orig_priority} -> {orig_text <> "\n" <> text, if priority == nil do orig_priority else priority end} end))
+        tab = Enum.at(opts, 0, "Rules")
+        id = Enum.at(opts, 1, "")
+        text = Enum.at(opts, 2, "")
+        priority = Enum.at(opts, 3, nil)
+        state = if not Map.has_key?(state.rules_text, tab) do
+          state = put_in(state.rules_text[tab], %{})
+          state = update_in(state.rules_text_order, & &1 ++ [tab])
+          state
+        else state end
+        update_in(state.rules_text[tab], &Map.update(&1, id, {text, if priority == nil do 0 else priority end}, fn {orig_text, orig_priority} -> {orig_text <> "\n" <> text, if priority == nil do orig_priority else priority end} end))
       "update_rule"             ->
-        id = Enum.at(opts, 0, "")
-        if Map.has_key?(state.rules_text, id) do
-          text = Enum.at(opts, 1, "")
-          priority = Enum.at(opts, 2, nil)
-          update_in(state.rules_text, &Map.update!(&1, id, fn {orig_text, orig_priority} -> {orig_text <> "\n" <> text, if priority == nil do orig_priority else priority end} end))
+        tab = Enum.at(opts, 0, "Rules")
+        id = Enum.at(opts, 1, "")
+        if Map.has_key?(state.rules_text, tab) and Map.has_key?(state.rules_text[tab], id) do
+          text = Enum.at(opts, 2, "")
+          priority = Enum.at(opts, 3, nil)
+          update_in(state.rules_text[tab], &Map.update!(&1, id, fn {orig_text, orig_priority} -> {orig_text <> "\n" <> text, if priority == nil do orig_priority else priority end} end))
         else state end
       "delete_rule"             ->
-        id = Enum.at(opts, 0, "")
-        update_in(state.rules_text, &Map.delete(&1, id))
+        tab = Enum.at(opts, 0, "Rules")
+        id = Enum.at(opts, 1, "")
+        if Map.has_key?(state.rules_text, tab) and Map.has_key?(state.rules_text[tab], id) do
+          update_in(state.rules_text[tab], &Map.delete(&1, id))
+        else state end
+      "add_rule_tab"             ->
+        tab = Enum.at(opts, 0, "Rules")
+        if not Map.has_key?(state.rules_text, tab) do
+          state = put_in(state.rules_text[tab], %{})
+          state = update_in(state.rules_text_order, & &1 ++ [tab])
+          state
+        else state end
       "run"                   -> call_function(state, context, Enum.at(opts, 0, "noop"), Enum.at(opts, 1, %{}))
       "play_tile"             -> play_tile(state, context.seat, Enum.at(opts, 0, :"1m"), Enum.at(opts, 1, 0))
       "draw"                  -> draw_tile(state, context.seat, Enum.at(opts, 0, 1), Enum.at(opts, 1, nil), false)
@@ -1007,16 +1045,10 @@ defmodule RiichiAdvanced.GameState.Actions do
       "reverse_turn_order"    -> Map.update!(state, :reversed_turn_order, &not &1)
       "advance_turn"          -> advance_turn(state)
       "change_turn"           -> change_turn(state, Conditions.from_seat_spec(state, context, Enum.at(opts, 0, "self")), true)
-      "win_by_discard"        -> win(state, context.seat, get_last_discard_action(state).tile, :discard)
-      "win_by_call"           -> win(state, context.seat, get_last_call_action(state).called_tile, :call)
-      "win_by_draw"           -> win(state, context.seat, Enum.at(state.players[context.seat].draw, 0), :draw)
-      "win_by_second_visible_discard" ->
-        seat = get_last_discard_action(state).seat
-        tile = state.players[seat].pond
-        |> Enum.reverse()
-        |> Enum.drop(1)
-        |> Enum.find(fn tile -> not Utils.has_matching_tile?([tile], [:"1x", :"2x"]) end)
-        win(state, context.seat, tile, :discard)
+      "win_by_discard"        -> win(state, context.seat, :discard)
+      "win_by_call"           -> win(state, context.seat, :call)
+      "win_by_draw"           -> win(state, context.seat, :draw)
+      "win_by_second_visible_discard" -> win(state, context.seat, :second_discard)
       "ryuukyoku"             -> exhaustive_draw(state, Enum.at(opts, 0, nil))
       "abortive_draw"         -> abortive_draw(state, Enum.at(opts, 0, nil))
       "set_status"            -> update_player(state, context.seat, fn player -> %Player{ player | status: MapSet.union(player.status, MapSet.new(opts)) } end)
@@ -1278,7 +1310,7 @@ defmodule RiichiAdvanced.GameState.Actions do
           ordering: Map.merge(&1.tile_behavior.ordering, ordering),
           ordering_r: Map.merge(&1.tile_behavior.ordering_r, ordering_r)
         } })
-      "set_tile_ordering_all"     ->
+      "set_tile_ordering_all" ->
         tiles = Enum.map(Enum.at(opts, 0, []), &Utils.to_tile/1)
         ordering = Enum.zip(Enum.drop(tiles, -1), Enum.drop(tiles, 1)) |> Map.new()
         ordering_r = Enum.zip(Enum.drop(tiles, 1), Enum.drop(tiles, -1)) |> Map.new()
@@ -1295,8 +1327,11 @@ defmodule RiichiAdvanced.GameState.Actions do
             case target do
               "hand" -> update_in(state.players[context.seat].hand, &add_attr_matching(&1, attrs, tile_specs))
               "draw" -> update_in(state.players[context.seat].draw, &add_attr_matching(&1, attrs, tile_specs))
+              "calls" -> update_in(state.players[context.seat].calls, &Enum.map(&1, fn {name, call} -> {name, add_attr_matching(call, attrs, tile_specs)} end))
               "aside" -> update_in(state.players[context.seat].aside, &add_attr_matching(&1, attrs, tile_specs))
-              "last_discard" -> update_in(state.players[context.seat].pond, fn pond -> Enum.drop(pond, -1) ++ add_attr_matching([Enum.at(pond, -1)], attrs, tile_specs) end)
+              "last_discard" -> update_winning_tile(state, context.seat, :discard, fn tile -> add_attr_matching([tile], attrs, tile_specs) |> Enum.at(0) end)
+              "last_called_tile" -> update_winning_tile(state, context.seat, :call, fn tile -> add_attr_matching([tile], attrs, tile_specs) |> Enum.at(0) end)
+              "winning_tile" -> update_winning_tile(state, context.seat, Map.get(context, :win_source, nil), fn tile -> add_attr_matching([tile], attrs, tile_specs) |> Enum.at(0) end)
               _ when is_integer(target) -> update_in(state.dead_wall, fn dead_wall -> List.update_at(dead_wall, target, &add_attr_matching([&1], attrs, tile_specs) |> Enum.at(0)) end)
               _      ->
                 IO.inspect("Unhandled add_attr target #{inspect(target)}")
@@ -1328,7 +1363,26 @@ defmodule RiichiAdvanced.GameState.Actions do
             state = update_in(state.players[seat].draw, &add_attr_tagged(&1, attrs, tagged))
             state = update_in(state.players[seat].aside, &add_attr_tagged(&1, attrs, tagged))
             state = update_in(state.players[seat].pond, &add_attr_tagged(&1, attrs, tagged))
+            state = update_in(state.players[seat].discards, &add_attr_tagged(&1, attrs, tagged))
             state = update_in(state.players[seat].calls, &Enum.map(&1, fn {name, call} -> {name, add_attr_tagged(call, attrs, tagged)} end))
+            state
+        end
+        state
+      "remove_attr_tagged"   ->
+        tag = Enum.at(opts, 0, "missing_tag")
+        tagged = Map.get(state.tags, tag, MapSet.new())
+        attrs = List.wrap(Enum.at(opts, 1, []))
+        # update every zone i guess
+        state = update_in(state.wall, &remove_attr_tagged(&1, attrs, tagged))
+        state = update_in(state.dead_wall, &remove_attr_tagged(&1, attrs, tagged))
+        state = for seat <- state.available_seats, reduce: state do
+          state ->
+            state = update_in(state.players[seat].hand, &remove_attr_tagged(&1, attrs, tagged))
+            state = update_in(state.players[seat].draw, &remove_attr_tagged(&1, attrs, tagged))
+            state = update_in(state.players[seat].aside, &remove_attr_tagged(&1, attrs, tagged))
+            state = update_in(state.players[seat].pond, &remove_attr_tagged(&1, attrs, tagged))
+            state = update_in(state.players[seat].discards, &remove_attr_tagged(&1, attrs, tagged))
+            state = update_in(state.players[seat].calls, &Enum.map(&1, fn {name, call} -> {name, remove_attr_tagged(call, attrs, tagged)} end))
             state
         end
         state
@@ -1343,7 +1397,10 @@ defmodule RiichiAdvanced.GameState.Actions do
       "tag_tiles"             ->
         tag = Enum.at(opts, 0, "missing_tag")
         tiles = List.wrap(Enum.at(opts, 1, [:"1x"]))
-        |> Enum.map(&from_named_tile(state, context, &1))
+        |> Enum.flat_map(&case &1 do
+          "last_discard" -> if get_last_discard_action(state) != nil do [get_last_discard_action(state).tile] else [] end
+          _ -> [from_named_tile(state, context, &1)]
+        end)
         state = Map.update!(state, :tags, fn tags -> Map.update(tags, tag, MapSet.new(tiles), &MapSet.union(&1, MapSet.new(tiles))) end)
         state
       "tag_drawn_tile"        ->
@@ -1797,24 +1854,22 @@ defmodule RiichiAdvanced.GameState.Actions do
     # basically, starting from the current turn player's choice, clear out others' choices
     ordered_seats = [state.turn, Utils.next_turn(state.turn), Utils.next_turn(state.turn, 2), Utils.next_turn(state.turn, 3)]
     |> Enum.filter(fn seat -> seat in state.available_seats end)
-    state = for seat <- ordered_seats, reduce: state do
-      state ->
+    {_, _, state} = for _ <- ordered_seats, reduce: {ordered_seats, ["skip", "play_tile"], state} do
+      {[seat | later_seats], superceded_choices, state} ->
         choice = state.players[seat].choice
-        if choice != nil and choice.name not in [nil, "skip", "play_tile"] do
-          superceded_choices = ["skip", "play_tile"] ++ if Map.has_key?(state.rules["buttons"], choice.name) do
-            Map.get(state.rules["buttons"][choice.name], "precedence_over", [])
-          else [] end
-
+        new_superceded_choices = if choice != nil do get_in(state.rules["buttons"][choice.name]["precedence_over"]) || [] else [] end
+        superceded_choices = superceded_choices ++ new_superceded_choices
+        state = if choice != nil and choice.name not in [nil, "skip", "play_tile"] do
           # replace with "skip" every button and choice that is superceded by our choice
           update_all_players(state, fn dir, player ->
-            not_us = seat != dir
-            choice_superceded = player.choice != nil and player.choice.name in superceded_choices
-            all_choices_superceded = Enum.all?(player.buttons ++ Map.keys(player.button_choices), fn button -> button in superceded_choices end)
-            if not_us and (choice_superceded or all_choices_superceded) do
+            is_later = dir in later_seats
+            our_choices = if player.choice != nil do [player.choice.name] else player.buttons ++ Map.keys(player.button_choices) end
+            all_choices_superceded = Enum.all?(our_choices, fn button -> button in superceded_choices end)
+            strictly_supercedes = Enum.all?(our_choices, fn button -> button != choice.name and button in superceded_choices end)
+            if (is_later or strictly_supercedes) and all_choices_superceded do
               if Debug.debug_actions() do
                 cond do
-                  all_choices_superceded -> IO.puts("Player #{dir} must skip due to having choices superceded by #{seat}, original choice was: #{inspect(choice)}")
-                  choice_superceded -> IO.puts("Player #{dir} must skip due to having choices superceded, original choice was: #{inspect(choice)}")
+                  all_choices_superceded -> IO.puts("Player #{dir} must skip due to having choices superceded by #{seat}, original choices were: #{inspect(player.buttons ++ Map.keys(player.button_choices))}")
                   true -> :ok
                 end
               end
@@ -1822,6 +1877,7 @@ defmodule RiichiAdvanced.GameState.Actions do
             else player end
           end)
         else state end
+        {later_seats, superceded_choices, state}
     end
 
     # check call priority lists
@@ -1856,6 +1912,11 @@ defmodule RiichiAdvanced.GameState.Actions do
         end)
     end
 
+    if Debug.debug_actions() do
+      IO.puts("Final choices:")
+      IO.inspect(Enum.map(state.players, fn {_seat, player} -> player.choice end))
+    end
+
     # check if nobody else needs to make choices
     if Enum.all?(state.players, fn {_seat, player} -> player.choice != nil end) do
       # if every action is skip, we need to resume deferred actions for all players
@@ -1874,9 +1935,10 @@ defmodule RiichiAdvanced.GameState.Actions do
       end
     else
       if Debug.debug_actions() do
-        for {seat, player} <- state.players, player.choice != nil do
+        for {seat, player} <- state.players, player.choice == nil do
           IO.puts("Player #{seat} still has a choice to make")
         end
+        IO.puts("")
       end
       # when we interrupt the current turn AI with our button choice, they fail to make a choice
       # this rectifies that
@@ -1962,24 +2024,5 @@ defmodule RiichiAdvanced.GameState.Actions do
     end ++ extract_actions(actions, names)
   end
   def extract_actions(_anything_else, _names), do: []
-
-  def map_action_opts([action | actions], fun) do
-    mapped_action = case action do
-      ["when", condition, subactions] -> ["when", condition, map_action_opts(subactions, fun)]
-      ["as", seats_spec, subactions] -> ["as", map_action_opts(seats_spec, fun), map_action_opts(subactions, fun)]
-      ["when_anyone", condition, subactions] -> ["when_anyone", condition, map_action_opts(subactions, fun)]
-      ["when_everyone", condition, subactions] -> ["when_everyone", condition, map_action_opts(subactions, fun)]
-      ["when_others", condition, subactions] -> ["when_others", condition, map_action_opts(subactions, fun)]
-      ["unless", condition, subactions] -> ["unless", condition, map_action_opts(subactions, fun)]
-      ["ite", condition, subactions1, subactions2] -> ["ite", condition, map_action_opts(subactions1, fun), map_action_opts(subactions2, fun)]
-      ["run", fn_name, args] -> ["run", fn_name, Map.new(args, fn {name, value} -> {name, fun.(value)} end)]
-      # this matches nested list args
-      _ when is_list(action) -> Enum.map(action, &if is_list(&1) do map_action_opts(&1, fun) else fun.(&1) end)
-      # this matches any arg
-      _ -> fun.(action)
-    end
-    [mapped_action | map_action_opts(actions, fun)]
-  end
-  def map_action_opts(anything_else, fun), do: fun.(anything_else)
 
 end

@@ -47,6 +47,7 @@ main div#container {
   display: flex;
   flex-flow: column nowrap;
   user-select: none;
+  contain: layout; /* make {position: fixed;} elements relative to this */
 }
 main div.messages-container {
   position: absolute;
@@ -109,6 +110,37 @@ main div.messages-container > div.messages {
   }
   main div.messages-container > div.messages {
     flex-direction: column-reverse;
+  }
+}
+/* all tooltips: https://stackoverflow.com/a/60660207 */
+@media (pointer: coarse), (hover: none) {
+  label[data-name][title]:not(.saki-card):focus::before,
+  label[data-name][title]:not(.saki-card):focus::after {
+    position: fixed;
+    font-weight: 500;
+    left: calc(1 * var(--tile-size));
+    color: var(--tile-front);
+    background: inherit;
+    border: none;
+    width: calc(100% - 2 * var(--tile-size));
+    height: fit-content;
+    padding: calc(0.25 * var(--tile-size));
+    box-sizing: border-box;
+    line-height: 1;
+    z-index: 100;
+  }
+  label[data-name][title]:not(.saki-card):focus::before {
+    content: attr(data-name);
+    font-size: calc(0.75 * var(--tile-size));
+    top: calc(0.25 * var(--tile-size));
+    border-radius: calc(0.5 * var(--tile-size)) calc(0.5 * var(--tile-size)) 0 0;
+  }
+  label[data-name][title]:not(.saki-card):focus::after {
+    content: attr(title);
+    font-size: calc(0.5 * var(--tile-size));
+    top: calc(1.5 * var(--tile-size));
+    border-radius: 0 0 calc(0.5 * var(--tile-size)) calc(0.5 * var(--tile-size));
+    white-space: pre-wrap;
   }
 }
 
@@ -517,8 +549,14 @@ div.pond.kamicha {
     padding-top: calc(0.25 * var(--tile-size));
     max-width: calc(11 * var(--tile-size));
   }
+  input.mobile-zoom-checkbox:checked ~ div.hand.self {
+    flex-flow: row wrap-reverse;
+    justify-content: center;
+    row-gap: calc(0.25 * var(--tile-size));
+  }
   input.mobile-zoom-checkbox:checked ~ div.hand.self > div.tiles {
     margin-left: 0;
+    flex-grow: 1;
   }
   input.mobile-zoom-checkbox:checked ~ div.hand.self > div.calls {
     transform: scale(calc(1 / var(--mobile-scale-factor)));
@@ -1341,10 +1379,18 @@ div.tile {
   filter: brightness(var(--tile-brightness)) saturate(var(--tile-saturate));
 }
 div.tile:not(.flat) {
-  transform: translateZ(0); /* https://stackoverflow.com/a/77475473 */
   filter: drop-shadow(0 calc(var(--tile-height) / -8) 0 var(--tile-front-side))
           drop-shadow(0 calc(var(--tile-height) / -8) 0 var(--tile-back-side))
           brightness(var(--tile-brightness)) saturate(var(--tile-saturate));
+}
+div.tile:not(.flat) {
+  /* various ways to address weird drop-shadow flickering */
+  /* chrome: https://issues.chromium.org/issues/41471914 */
+  /* safari: https://bugs.webkit.org/show_bug.cgi?id=207586 */
+  transform: translateZ(0); /* https://stackoverflow.com/a/77475473 */
+  will-change: filter; /* https://stackoverflow.com/a/78130590 */
+  backdrop-filter: blur(0); /* https://stackoverflow.com/a/75027316 */
+  -webkit-backface-visibility: hidden; /* https://old.reddit.com/r/css/comments/bweqdc/-/kjinb4c/ */
 }
 div.hand.self div.tiles > div.tile.selected,
 div.hand.self div.draws > div.tile.selected {
@@ -1877,24 +1923,57 @@ div.declare-yaku button.declare-yaku-button:active {
 }
 
 /* rules */
-input.rules-popover-checkbox + label {
+div.rules-wrapper {
+  z-index: 10000;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
   position: absolute;
-  padding: 0 calc(0.125 * var(--tile-size));
-  border-radius: calc(0.125 * var(--tile-size));
-  font-size: calc(0.75 * var(--tile-size));
-  bottom: calc(-1.5 * var(--tile-size));
-  width: calc(0.75 * var(--tile-size));
-  height: calc(2 * var(--tile-size));
-  left: calc(-1.5 * var(--tile-size));
+  left: calc(-1.25 * var(--tile-size));
   top: calc(-0.5 * var(--tile-size));
   display: flex;
+  flex-flow: column nowrap;
+  row-gap: calc(0.25 * var(--tile-size));
+}
+div.rules-wrapper > label {
+  padding: calc(0.125 * var(--tile-size));
+  border-radius: calc(0.125 * var(--tile-size));
+  font-size: calc(0.5 * var(--tile-size));
+  bottom: calc(-1.5 * var(--tile-size));
+  width: calc(0.5 * var(--tile-size));
+  display: flex;
+  pointer-events: initial;
   justify-content: center;
   align-items: center;
   writing-mode: sideways-lr;
 }
+/*
+  hack; add invisible "unselect" radio option to allow unselecting
+  this appears above the selected label, but below unselected labels
+*/
+input.rules-popover-unselect + label {
+  background: transparent;
+  width: calc(0.5 * var(--tile-size));
+  height: calc(100% + 1 * var(--tile-size));
+  top: 0;
+  position: absolute;
+  z-index: -2;
+}
+input.rules-popover-radio:checked ~ input.rules-popover-unselect + label {
+  z-index: 0;
+}
+input.rules-popover-radio:checked + label {
+  z-index: -1;
+}
+input.rules-popover-radio:not(:checked) + label {
+  z-index: 1;
+}
 div.rules-popover-container {
   z-index: 10000;
   position: absolute;
+  left: calc(1.25 * var(--tile-size));
+  top: calc(0.5 * var(--tile-size));
   width: 0;
   transition: width 0.1s ease;
   height: 100%;
@@ -1912,11 +1991,12 @@ div.rules-popover-container::before {
   z-index: -1;
   transition: border-width 0.1s cubic-bezier(0, 1, 0, 1);
 }
-input.rules-popover-checkbox:checked ~ div.rules-popover-container {
+input.rules-popover-radio:checked + label + div.rules-popover-container {
   width: 100%;
+  pointer-events: initial;
   user-select: text;
 }
-input.rules-popover-checkbox:checked ~ div.rules-popover-container::before {
+input.rules-popover-radio:checked + label + div.rules-popover-container::before {
   border-width: calc(0.125 * var(--tile-size));
 }
 div.rules-popover {
