@@ -18,7 +18,7 @@
   [
     # should be an AND of the following two things
       # CATEGORY
-    [
+    [[
       # should be an OR of the following:
       [
         # Any Like Numbers
@@ -87,9 +87,9 @@
           ]
         ]
       ]
-    ],
+    ]],
       # PATTERN OF BLOCKS
-    [
+    [[
         # 2KKK
       [
         [["pair"], 1], [["am_kong"], 3], "restart",
@@ -194,9 +194,9 @@
         [["am_dragon_pung"], 1], [["am_news_kong"], 1], ["unique", [["any"], 2]], "restart",
         [["am_dragon_pung"], 1], [["am_news_kong"], 1], ["unique", [["any"], -3]]
       ]
-    ]
+    ]]
   ],
-  [["am_dragons_love", "am_dragons_wings", "am_dragons_breath"], 1]
+  [[["am_dragons_love", "am_dragons_wings", "am_dragons_breath"], 1]]
 ]
 |
 .open_win_definition = [
