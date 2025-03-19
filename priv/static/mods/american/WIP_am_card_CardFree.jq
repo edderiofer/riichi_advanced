@@ -22,92 +22,69 @@
       # should be an OR of the following:
       [
         # Any Like Numbers
-        ["XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b XX0c|XXX0c|XXXX0c|XXXXX0c"],
-        [
-          #TODO: add some kind of constraint that bans unlike number tiles and winds
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX2a|XXX2a|XXXX2a|XXXXX2a|XX3a|XXX3a|XXXX3a|XXXXX3a|etc."
-          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
-        ]
+        [["X0a X0b X0c"], 1], "restart",
+        [["NN|EE|WW|SS", "X0a X1a|X2a|X3a|X4a|X5a|X6a|X7a|X8a"], -1]
       ],
       [
         # Winds NEWS
-        ["NN|NNN|NNNN|NNNNN EE|EEE|EEEE|EEEEE WW|WWW|WWWW|WWWWW SS|SSS|SSSS|SSSSS"],
-        [
-          #TODO: add some kind of constraint that bans extra winds and numbers
-          # NOT ????
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a"
-        ]
+        [["NN EE WW SS"], 1], "restart",
+        [["X0a"], -1]
       ],
       [
         # Winds NS
-        ["NN|NNN|NNNN|NNNNN SS|SSS|SSSS|SSSSS"],
-        [
-          #TODO: add some kind of constraint that bans extra Es and Ws and numbers
-          # NOT "EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW"
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a"
-        ]
+        [["NN SS"], 1], "restart",
+        [["X0a", "EE|WW"], -1]
       ],
       [
         # Winds EW
-        ["EE|EEE|EEEE|EEEEE WW|WWW|WWWW|WWWWW"],
-        [
-          #TODO: add some kind of constraint that bans extra Es and Ws and numbers
-          # NOT "NN|NNN|NNNN|NNNNN|SS|SSS|SSSS|SSSSS"
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a"
-        ]
+        [["EE WW"], 1], "restart",
+        [["X0a", "NN|SS"], -1]
       ],
       [
         # 369
-        ["33a|333a|3333a|33333a"],
-        ["66a|666a|6666a|66666a"],
-        ["99a|999a|9999a|99999a"],
-        [
-          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX2a|XXX2a|XXXX2a|XXXXX2a"
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b"
-          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
-        ]
+        [["3a"], 1], [["6a"], 1], [["9a"], 1], "restart",
+        [["X0a X0b", "1a|2a|4a|5a|7a|8a|NN|EE|WW|SS"], -1]
       ],
       [
         # 2468
-        ["44a|444a|4444a|44444a"],
-        ["66a|666a|6666a|66666a"],
-        ["22a|222a|2222a|22222a|88a|888a|8888a|88888a"],
-        [
-          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX3a|XXX3a|XXXX3a|XXXXX3a"
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b"
-          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
-        ]
+        [["4a"], 1], [["6a"], 1], [["2a|8a"], 1], "restart",
+        [["X0a X0b", "1a|3a|5a|7a|9a|NN|EE|WW|SS"], -1]
       ],
       [
         # 13579
-        ["55a|555a|5555a|55555a"],
         [
-          ["11a|111a|1111a|11111a 33a|333a|3333a|33333a"],
-          ["33a|333a|3333a|33333a 77a|777a|7777a|77777a"],
-          ["77a|777a|7777a|77777a 99a|999a|9999a|99999a"],
-        ], #either you have 1&3, or you have 3&7, or you have 7&9
-        [
-          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX1a|XXX1a|XXXX1a|XXXXX1a|XX3a|XXX3a|XXXX3a|XXXXX3a"
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b"
-          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
-          #TODO: add some kind of constraint that bans 1359 and 1579 w/o 7 and 3 resp.
-          # ?????
+            # either you have 135 without 9, or you have 579 without 1, or you have 357
+          [
+            [["1a"], 1], [["3a"], 1], [["5a"], 1], "restart",
+            [["X0a X0b", "2a|4a|6a|8a|9a|NN|EE|WW|SS"], -1]
+          ],
+          [
+            [["5a"], 1], [["7a"], 1], [["9a"], 1], "restart",
+            [["X0a X0b", "2a|4a|6a|8a|1a|NN|EE|WW|SS"], -1]
+          ],
+          [
+            [["3a"], 1], [["5a"], 1], [["7a"], 1], "restart",
+            [["X0a X0b", "2a|4a|6a|8a|NN|EE|WW|SS"], -1]
+          ]
         ]
       ],
       [
         # Consecutive Run
         # time to add 22 cases! what fun! 😭
+          # actually i got it down to only 11 cases! yippee!
+            # haha past Sophie, future you has gotten it down to 2 cases
         [
-          #TODO: add 22 cases here
-        ], 
-        [
-          #TODO: add some kind of constraint that bans other numbers, like numbers, and winds
-          # NOT ?????
-          # NOT "XX0a|XXX0a|XXXX0a|XXXXX0a XX0b|XXX0b|XXXX0b|XXXXX0b" (bans like numbers)
-          # NOT "NN|NNN|NNNN|NNNNN|EE|EEE|EEEE|EEEEE|WW|WWW|WWWW|WWWWW|SS|SSS|SSSS|SSSSS"
+            # you have one of the following cases:
+            # consecutive run of length 3 or 4:
+          [
+            [["X0a X1a X2a"], 1], "restart",
+            [["X0a X0b", "X0a X4a", "NN|EE|WW|SS"], -1]
+          ],
+            # consecutive run of length 5 or 6:
+          [
+            [["X0a X1a X2a X3a X4a"], 1], "restart",
+            [["X0a X0b", "X0a X6a", "NN|EE|WW|SS"], -1]
+          ]
         ]
       ]
     ],
@@ -217,7 +194,7 @@
         [["am_dragon_pung"], 1], [["am_news_kong"], 1], ["unique", [["any"], 2]], "restart",
         [["am_dragon_pung"], 1], [["am_news_kong"], 1], ["unique", [["any"], -3]]
       ]
-    ],
+    ]
   ],
   [["am_dragons_love", "am_dragons_wings", "am_dragons_breath"], 1]
 ]
