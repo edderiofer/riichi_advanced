@@ -4,14 +4,13 @@
 |
 .set_definitions.am_quint = [0, 0, 0, 0, 0]
 |
-.set_definitions.am_news_kong = ["NEWS"]
+.set_definitions.am_news_kong = ["1z", "2z", "3z", "4z"]
 |
-.set_definitions.am_dragon_pung = ["RG0"]
+.set_definitions.am_dragon_pung = ["0z", "6z", "7z"]
 |
 .set_definitions.am_dragons_love = ["DDDDa DDDDb FFF FFF"]
 |
-  # NOTE: this hand currently doesn't work (why is it specifically two 1bams?)
-# .set_definitions.am_dragons_wings = ["DDDDa DDDDb DDDDc", "1s", "1s"]
+.set_definitions.am_dragons_wings = ["1s", "1s", "0z", "0z", "0z", "0z", "6z", "6z", "6z", "6z", "7z", "7z", "7z", "7z"]
 |
 .set_definitions.am_dragons_breath = ["NN EE WW SS RR GG 00"]
 |
@@ -114,21 +113,111 @@
     ],
       # PATTERN OF BLOCKS
     [
-      [[["pair"], 1], [["am_kong", "am_news_kong"], 3]],
-      [[["pair"], 3], [["am_kong", "am_news_kong"], 2]],
-      [[["pair"], 5], [["am_kong", "am_news_kong"], 1]],
-      [[["pair"], 1], [["am_pung", "am_dragon_pung"], 4]],
-      [[["pair"], 4], [["am_pung", "am_dragon_pung"], 2]],
-      [[["pair"], 2], [["am_quint"], 2]],
-      [[["am_pung", "am_dragon_pung"], 3], [["am_quint"], 1]],
-      [[["am_kong", "am_news_kong"], 1], [["am_quint"], 2]],
-      [[["am_pung", "am_dragon_pung"], 2], [["am_kong", "am_news_kong"], 2]]
+        # 2KKK
+      [
+        [["pair"], 1], [["am_kong"], 3], "restart",
+        ["unique", [["any"], 4]], "restart",
+        ["unique", [["any"], -5]]
+      ],
+      [
+        [["pair"], 1], [["am_kong"], 2], [["am_news_kong"], 1], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], 3]], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], -4]]
+      ],
+        # 222KK
+      [
+        [["pair"], 3], [["am_kong"], 2], "restart",
+        ["unique", [["any"], 5]], "restart",
+        ["unique", [["any"], -6]]
+      ],
+      [
+        [["pair"], 3], [["am_kong"], 1], [["am_news_kong"], 1], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], 4]], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], -5]]
+      ],
+        # 22222K
+      [
+        [["pair"], 5], [["am_kong"], 1], "restart",
+        ["unique", [["any"], 6]], "restart",
+        ["unique", [["any"], -7]]
+      ],
+      [
+        [["pair"], 5], [["am_news_kong"], 1], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], 5]], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], -6]]
+      ],
+        # 2PPPP
+      [
+        [["pair"], 1], [["am_pung"], 4], "restart",
+        ["unique", [["any"], 5]], "restart",
+        ["unique", [["any"], -6]]
+      ],
+      [
+        [["pair"], 1], [["am_pung"], 3], [["am_dragon_pung"], 1], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], 4]], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], -5]]
+      ],
+        # 2222PP
+      [
+        [["pair"], 4], [["am_pung"], 2], "restart",
+        ["unique", [["any"], 6]], "restart",
+        ["unique", [["any"], -7]]
+      ],
+      [
+        [["pair"], 4], [["am_pung"], 1], [["am_dragon_pung"], 1], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], 5]], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], -6]]
+      ],
+        # 22QQ
+      [
+        [["pair"], 2], [["am_quint"], 2], "restart",
+        ["unique", [["any"], 4]], "restart",
+        ["unique", [["any"], -5]]
+      ],
+        # PPPQ
+      [
+        [["am_pung"], 3], [["am_quint"], 1], "restart",
+        ["unique", [["any"], 4]], "restart",
+        ["unique", [["any"], -5]]
+      ],
+      [
+        [["am_pung"], 2], [["am_dragon_pung"], 1], [["am_quint"], 1], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], 3]], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], -4]]
+      ],
+        # KQQ
+      [
+        [["am_kong"], 1], [["am_quint"], 2], "restart",
+        ["unique", [["any"], 4]], "restart",
+        ["unique", [["any"], -5]]
+      ],
+      [
+        [["am_news_kong"], 1], [["am_quint"], 2], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], 3]], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], -4]]
+      ],
+        # PPKK
+      [
+        [["am_pung"], 2], [["am_kong"], 2], "restart",
+        ["unique", [["any"], 4]], "restart",
+        ["unique", [["any"], -5]]
+      ],
+      [
+        [["am_pung"], 1], [["am_dragon_pung"], 1], [["am_kong"], 2], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], 3]], "restart",
+        [["am_dragon_pung"], 1], ["unique", [["any"], -4]]
+      ],
+      [
+        [["am_pung"], 2], [["am_kong"], 1], [["am_news_kong"], 1], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], 3]], "restart",
+        [["am_news_kong"], 1], ["unique", [["any"], -4]]
+      ],
+      [
+        [["am_pung"], 1], [["am_dragon_pung"], 1], [["am_kong"], 1], [["am_news_kong"], 1], "restart",
+        [["am_dragon_pung"], 1], [["am_news_kong"], 1], ["unique", [["any"], 2]], "restart",
+        [["am_dragon_pung"], 1], [["am_news_kong"], 1], ["unique", [["any"], -3]]
+      ]
     ],
-      # NO DUPLICATE FLOWER/DRAGON BLOCKS
-    [
-      # NOT "DDa|DDDa|DDDDa|DDDDDa DDa|DDDa|DDDDa|DDDDDa" (bans like dragon blocks)
-      # NOT "FF|FFF|FFFF|FFFFF FF|FFF|FFFF|FFFFF" (bans like flower blocks)
-    ]
   ],
   [["am_dragons_love", "am_dragons_wings", "am_dragons_breath"], 1]
 ]
