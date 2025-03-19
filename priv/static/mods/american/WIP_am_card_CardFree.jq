@@ -78,12 +78,12 @@
             # consecutive run of length 3 or 4:
           [
             [["X0a X1a X2a"], 1], "restart",
-            [["X0a X0b", "X0a X4a", "NN|EE|WW|SS"], -1]
+            [["X0a X0b", "X0a X4a|X5a|X6a|X7a|X8a", "NN|EE|WW|SS"], -1]
           ],
             # consecutive run of length 5 or 6:
           [
             [["X0a X1a X2a X3a X4a"], 1], "restart",
-            [["X0a X0b", "X0a X6a", "NN|EE|WW|SS"], -1]
+            [["X0a X0b", "X0a X6a|X7a|X8a", "NN|EE|WW|SS"], -1]
           ]
         ]
       ]
