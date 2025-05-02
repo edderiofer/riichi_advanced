@@ -1,0 +1,19 @@
+on after_initialization do
+  add_rule("Rules", "Flowers", """
+  - A flower tile is worth 1 if its number matches your seat (1=east, 2=south, 3=west, 4=north)
+  - Having all 4 flower tiles or all 4 season tiles is worth %{four_flowers_value}.
+  """, %{four_flowers_value: !four_flowers_value})
+end
+
+define_yaku yaku, "Seat Flower", 1, seat_is("east") and match(["flowers"], ~m"1f:1")
+define_yaku yaku, "Seat Flower", 1, seat_is("south") and match(["flowers"], ~m"2f:1")
+define_yaku yaku, "Seat Flower", 1, seat_is("west") and match(["flowers"], ~m"3f:1")
+define_yaku yaku, "Seat Flower", 1, seat_is("north") and match(["flowers"], ~m"4f:1")
+define_yaku yaku, "Seat Season", 1, seat_is("east") and match(["flowers"], ~m"1g:1")
+define_yaku yaku, "Seat Season", 1, seat_is("south") and match(["flowers"], ~m"2g:1")
+define_yaku yaku, "Seat Season", 1, seat_is("west") and match(["flowers"], ~m"3g:1")
+define_yaku yaku, "Seat Season", 1, seat_is("north") and match(["flowers"], ~m"4g:1")
+define_yaku yaku, "All Flowers", !four_flowers_value, match(["flowers"], ~m"1f:1, 2f:1, 3f:1, 4f:1")
+define_yaku yaku, "All Seasons", !four_flowers_value, match(["flowers"], ~m"1g:1, 2g:1, 3g:1, 4g:1")
+# define_yaku_precedence "All Flowers", ["Seat Flower"]
+# define_yaku_precedence "All Seasons", ["Seat Season"]
