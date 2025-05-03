@@ -470,6 +470,69 @@ defmodule RiichiAdvanced.Constants do
           # TODO: figure out how to implement these ones
         # on ron, responsible player pays double, other players pay single;
         # on tsumo, everyone pays double
+          # TODO: add instant payouts:
+        # 25¢ for Thirteen Flowers (immediate, on 13th flower declaration)
+        # 25¢ for No Flowers (immediate on initial flower-declaration phase, and again on winning (need to clarify if this is also paid out if someone else wins))
+        # 25¢ for daiminkan
+        # 50¢ for ankan
+        # 50¢ for kakan
+        
+
+          # optional mods:
+        # Doubles: At the start of the game, two dice are rolled to break the wall. A roll of doubles means all payouts are doubled.
+        # Jai Alái (Pot): Players put a share, typically $1, into the pot. At the end of each game, the winner gets one marker, two for tsumo. The first player to get five markers wins the pot.
+        # Jokers: At the start of the game, after all players have their tiles dealt and their flowers declared and replaced, the máno can roll the dice again to determine a joker tile. Count that many blocks down the flower wall. Turn over the top tile. (If the tile is a flower, keep turning over the next one until you have a suited tile.) This tile is now the joker and can represent any other suited tile. 
+      ]
+    },
+    "visayan" => %{
+      display_name: "Visayan",
+      tutorial_link: "https://mahjongpros.com/blogs/mahjong-rules-and-scoring-tables/official-filipino-visayan-mahjong-rules",
+      ruleset: "visayan",
+      globals: %{
+        chii_name: "Chow",
+        pon_name: "Pung",
+        kan_name: "Kang",
+        ankan_name: "Secret",
+        ron_name: "Tódas",
+        tsumo_name: "Búnot",
+        han: "¢"
+      },
+      mods: [
+        "base", "start_16",
+        "global_mods", "default_auto_buttons",
+        "standard_wall", "framed_5z",
+        "standard_win",
+        "chii", "pon", "kan", "ron", "tsumo", "default_flowers",
+          # gotta add a .majs that allows calling for NEWS and Beauty (RG0)
+        # "news_beauty",
+          # now to add the yaku
+        # 100¢ base for winning,
+        %{name: "yaku/pinghu", config: %{list: "yaku", name: "All Sequences", value: 25}},
+        %{name: "yaku/toitoi", config: %{list: "yaku", name: "All Triplets", value: 25}},
+        %{name: "yaku/menzenchin", config: %{list: "yaku", name: "Concealed Hand", value: 25}},
+        # 25¢ for All Revealed,
+        # 25¢ for Quick Win (winning with 5 discards),
+        %{name: "yaku/ittsu", config: %{list: "yaku", name: "Pure Straight", value: 50}},
+        %{name: "yaku/honitsu", config: %{
+          hon_list: "not_yaku", hon_name: "Half Flush", hon_value: 0,
+          chin_list: "yaku", chin_name: "Full Flush", chin_value: 50
+        }},
+        # 50¢ for Seven Pairs (seven pairs and a pung),
+        # 25¢ for Back to Back (shanpon wait),
+          # TODO: clarify these next two
+        # 25¢ for Single (penchan/kanchan/tanki wait),
+        # 25¢ for Paníngit (kanchan wait)?,
+
+          # TODO: figure out how to implement these ones
+        # on ron, responsible player pays double, other players pay single;
+        # on tsumo, everyone pays double
+          # TODO: add instant payouts:
+        # 25¢ for Beauty
+        # 25¢ for NEWS
+        # 25¢ for No Flowers (immediate on initial flower-declaration phase, and again on winning (need to clarify if this is also paid out if someone else wins))
+        # 25¢ for daiminkan
+        # 50¢ for ankan
+        # 50¢ for kakan
 
           # optional mods:
         # Doubles: At the start of the game, two dice are rolled to break the wall. A roll of doubles means all payouts are doubled.
