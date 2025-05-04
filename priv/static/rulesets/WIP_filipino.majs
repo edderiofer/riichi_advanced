@@ -1,35 +1,35 @@
-  # yaku precedence
-# define_yaku_precedence "Four Concealed Triplets", ["All Triplets"]
-# define_yaku_precedence "Four Kongs", ["All Triplets"]
-# define_yaku_precedence "All Terminals", ["All Triplets"]
-# define_yaku_precedence "Thirteen Orphans", ["Mixed Terminals"]
-# define_yaku_precedence "Nine Gates", ["Full Flush", "Concealed Hand"]
-# define_yaku_precedence "Big Three Dragons", ["White Dragon", "Green Dragon", "Red Dragon"]
-# define_yaku_precedence "Big Four Winds", ["Prevalent Wind", "Seat Wind"]
-# define_yaku_precedence "All Honours", ["Prevalent Wind", "Seat Wind", "All Triplets", "Half Flush", "Mixed Terminals"]
-# define_yaku_precedence "Blessing of Heaven", ["Self Draw", "Concealed Hand"]
-# define_yaku_precedence "Blessing of Earth", ["Self Draw", "Concealed Hand"]
-# define_yaku_precedence "Blessing of Man", ["Concealed Hand"]
+  # yaku (TODO: implement the rest)
+define_yaku yaku, "Base", 4, true
+define_yaku yaku, "All Revealed", 1, match(["hand"], [any:-2]) and won_by_discard
+# define_yaku yaku, "Quick Win", 1, ### TODO ###
+define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive, pair:7, koutsu:1])
+# define_yaku yaku, "Back to Back", 1, ### TODO ### (basically, if the player has a shanpon wait. clarify if an 8-sided pon wait, for Seven Pairs, is valid.)
+# define_yaku yaku, "Single", 1, ### TODO ### (clarify)
+# define_yaku yaku, "Paníngit", 1, ### TODO ### (clarify)
 
-# score calculation (TODO: implement for Filipino)
+  # instant payouts (TODO: implement these)
+
+  # yaku precedence (TODO: implement for Filipino)
+  # also TODO: implement the yaku themselves
+# define_yaku_precedence "Seven Pairs", ["Back to Back", "Single"] (check whether this is the case)
+# define_yaku_precedence "Concealed Hand", ["All Revealed"] (check whether this is the case)
+# define_yaku_precedence "All Revealed", ["Single"] (check whether this is the case)
+
+# score calculation
 set score_calculation, %{
-  scoring_method: "score_table",
-  score_table: %{"0": 1, "1": 2, "2": 4, "3": 8, "4": 16, "5": 24, "6": 32, "7": 48, "8": 64, "9": 96, "10": 128, "11": 192, "12": 256, max: 384},
+  scoring_method: "multiplier",
+  "score_multiplier": 25,
   discarder_multiplier: 2,
-  non_discarder_multiplier: 0,
-  self_draw_multiplier: 1,
+  non_discarder_multiplier: 1,
+  self_draw_multiplier: 2,
   yaku_lists: ["yaku"],
   agarirenchan: true,
-  split_pao_ron: false,
-  point_name: "Fan",
-  win_by_discard_label: "Hu",
-  win_by_draw_label: "Zimo",
-  win_by_discard_name: "Hu",
-  win_by_discard_name_2: "Double Hu",
-  win_by_discard_name_3: "Triple Hu",
-  win_by_draw_name: "Zimo",
-  exhaustive_draw_name: "Draw",
-  win_with_pao_name: "Bao"
+  point_name: "¢",
+  win_by_discard_label: "Tódas",
+  win_by_draw_label: "Búnot",
+  win_by_discard_name: "Tódas",
+  win_by_draw_name: "Búnot",
+  exhaustive_draw_name: "Draw"
 }
 
   # mods
