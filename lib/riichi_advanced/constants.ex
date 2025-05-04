@@ -449,17 +449,17 @@ defmodule RiichiAdvanced.Constants do
         "standard_wall", "framed_5z",
         "standard_win",
         "chii", "pon", "kan", "ron", "tsumo", "filipino_flowers",
-          # now to add the yaku
+          # now to add the yaku (note that all "value" listed here will be multiplied by 25¢ in filipino.majs)
         # 100¢ base for winning,
-        %{name: "yaku/pinghu", config: %{list: "yaku", name: "All Sequences", value: 25}},
-        %{name: "yaku/toitoi", config: %{list: "yaku", name: "All Triplets", value: 25}},
-        %{name: "yaku/menzenchin", config: %{list: "yaku", name: "Concealed Hand", value: 25}},
+        %{name: "yaku/pinghu", config: %{list: "yaku", name: "All Sequences", value: 1}},
+        %{name: "yaku/toitoi", config: %{list: "yaku", name: "All Triplets", value: 1}},
+        %{name: "yaku/menzenchin", config: %{list: "yaku", name: "Concealed Hand", value: 1}},
         # 25¢ for All Revealed,
         # 25¢ for Quick Win (winning with 5 discards),
-        %{name: "yaku/ittsu", config: %{list: "yaku", name: "Pure Straight", value: 50}},
+        %{name: "yaku/ittsu", config: %{list: "yaku", name: "Pure Straight", value: 2}},
         %{name: "yaku/honitsu", config: %{
           hon_list: "not_yaku", hon_name: "Half Flush", hon_value: 0,
-          chin_list: "yaku", chin_name: "Full Flush", chin_value: 50
+          chin_list: "yaku", chin_name: "Full Flush", chin_value: 2
         }},
         # 50¢ for Seven Pairs (seven pairs and a pung),
         # 25¢ for Back to Back (shanpon wait),
@@ -503,19 +503,19 @@ defmodule RiichiAdvanced.Constants do
         "standard_wall", "framed_5z",
         "standard_win",
         "chii", "pon", "kan", "ron", "tsumo", "default_flowers",
-          # gotta add a .majs that allows calling for NEWS and Beauty (RG0)
+          # gotta add a .majs that allows calling for NEWS and Beauty (RG0) (probably put the NEWS/beauty instant payments here too)
         # "news_beauty",
-          # now to add the yaku
+          # now to add the yaku (note that all "value" listed here will be multiplied by 25¢ in filipino.majs)
         # 100¢ base for winning,
-        %{name: "yaku/pinghu", config: %{list: "yaku", name: "All Sequences", value: 25}},
-        %{name: "yaku/toitoi", config: %{list: "yaku", name: "All Triplets", value: 25}},
-        %{name: "yaku/menzenchin", config: %{list: "yaku", name: "Concealed Hand", value: 25}},
+        %{name: "yaku/pinghu", config: %{list: "yaku", name: "All Sequences", value: 1}},
+        %{name: "yaku/toitoi", config: %{list: "yaku", name: "All Triplets", value: 1}},
+        %{name: "yaku/menzenchin", config: %{list: "yaku", name: "Concealed Hand", value: 1}},
         # 25¢ for All Revealed,
         # 25¢ for Quick Win (winning with 5 discards),
-        %{name: "yaku/ittsu", config: %{list: "yaku", name: "Pure Straight", value: 50}},
+        %{name: "yaku/ittsu", config: %{list: "yaku", name: "Pure Straight", value: 2}},
         %{name: "yaku/honitsu", config: %{
           hon_list: "not_yaku", hon_name: "Half Flush", hon_value: 0,
-          chin_list: "yaku", chin_name: "Full Flush", chin_value: 50
+          chin_list: "yaku", chin_name: "Full Flush", chin_value: 2
         }},
         # 50¢ for Seven Pairs (seven pairs and a pung),
         # 25¢ for Back to Back (shanpon wait),
