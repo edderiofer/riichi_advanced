@@ -8,6 +8,11 @@ define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive
 # define_yaku yaku, "Paníngit", 1, ### TODO ### (clarify)
 
   # instant payouts (TODO: implement these)
+  # TODO: need to clarify who these payments come from (is it everyone for daiminkan/kakan, or just the discarder?)
+# 25¢ for No Flowers (immediate on initial flower-declaration phase, and again on winning (need to clarify if this is also paid out if someone else wins))
+# 25¢ for daiminkan
+# 50¢ for ankan
+# 50¢ for kakan
 
   # yaku precedence (TODO: implement for Filipino)
   # also TODO: implement the yaku themselves
