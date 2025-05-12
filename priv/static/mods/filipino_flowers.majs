@@ -19,6 +19,12 @@ define_button start_flower,
   do
     big_text("Flower")
     flower("1z", "2z", "3z", "4z", "5z", "6z", "7z", "1f", "2f", "3f", "4f", "1g", "2g", "3g", "4g")
+    if match(["flowers"], any:13) and status_missing("thirteen_flowers") do
+        # currently i'm assuming that this instant payout is from everyone. TODO: check if that's the case
+      add_score(75, "self")
+      subtract_score(25, "others")
+      set_status("thirteen_flowers")
+    end
     draw(1, "opposite_end")
   end
 
@@ -58,6 +64,12 @@ define_button flower,
   do
     big_text("Flower")
     flower("1z", "2z", "3z", "4z", "5z", "6z", "7z", "1f", "2f", "3f", "4f", "1g", "2g", "3g", "4g")
+    if match(["flowers"], any:13) and status_missing("thirteen_flowers") do
+        # currently i'm assuming that this instant payout is from everyone. TODO: check if that's the case
+      add_score(75, "self")
+      subtract_score(25, "others")
+      set_status("thirteen_flowers")
+    end
     set_status("flower")
     unset_status("kan")
     if no_tiles_remaining do
