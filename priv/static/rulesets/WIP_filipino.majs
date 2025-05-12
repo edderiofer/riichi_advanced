@@ -1,7 +1,13 @@
+on after_turn_change do
+  if not anyone_status("initial_flowers") do
+    add_counter(discard_count, 1)
+  end
+end
+
   # yaku (TODO: implement the rest)
 define_yaku yaku, "Base", 4, true
 define_yaku yaku, "All Revealed", 1, match(["hand"], [any:-2]) and won_by_discard
-# define_yaku yaku, "Quick Win", 1, ### TODO ###
+define_yaku yaku, "Quick Win", 1, counter_at_most(discard_count, 5) # check whether this is correct
 define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive, pair:7, koutsu:1])
 # define_yaku yaku, "Back to Back", 1, ### TODO ### (basically, if the player has a shanpon wait. clarify if an 8-sided pon wait, for Seven Pairs, is valid.)
 # define_yaku yaku, "Single", 1, ### TODO ### (clarify)
@@ -39,8 +45,8 @@ set score_calculation, %{
 
   # mods
 define_mod_category "Rules"
-define_mod filipino_doubles, name: "Doubles", desc: "If the initial die roll to break the wall rolls doubles, all payouts are doubled."
-define_mod filipino_jai_alai, name: "Jai Alái", desc: "Each player puts $1.00 into the pot at the start of the game. First player to get five wins (búnot counts as two wins) gets the pot."
-define_mod filipino_jokers, name: "Filipino Jokers", desc: "After the initial flower replacement stage, the dealer may choose to flip a random tile from the wall. That tile is now a joker."
+# define_mod filipino_doubles, name: "Doubles", desc: "If the initial die roll to break the wall rolls doubles, all payouts are doubled."
+# define_mod filipino_jai_alai, name: "Jai Alái", desc: "Each player puts $1.00 into the pot at the start of the game. First player to get five wins (búnot counts as two wins) gets the pot."
+# define_mod filipino_jokers, name: "Filipino Jokers", desc: "After the initial flower replacement stage, the dealer may choose to flip a random tile from the wall. That tile is now a joker."
 
 set default_mods, []
