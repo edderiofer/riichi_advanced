@@ -431,6 +431,14 @@ defmodule RiichiAdvanced.Constants do
       ]
     },
     "filipino" => %{
+          # TODOS:
+          # * check how "All Revealed" works
+          # * check how "Back To Back", "Single", and "Paningit" yaku work, then implement
+          # * check who pays for the Thirteen Flowers instant payout (this is in `filipino_flowers.majs`)
+          # * check and implement other instant payouts
+          # * check and implement yaku precedence
+          # * implement mods
+          # * check whether `yaku/honitsu.majs` spawns a ghost "Honitsu" yaku worth 0 han
       display_name: "Filipino",
       tutorial_link: "https://mahjongpros.com/blogs/mahjong-rules-and-scoring-tables/official-filipino-mahjong-rules?_pos=2&_sid=1f21c54fb&_ss=r",
       ruleset: "filipino",
@@ -459,12 +467,17 @@ defmodule RiichiAdvanced.Constants do
           hon_list: "not_yaku", hon_name: "Half Flush", hon_value: 0,
           chin_list: "yaku", chin_name: "Full Flush", chin_value: 2
         }},
-
-          # TODO: add instant payout (this one can be added in `filipino_flowers`
-        # 25¢ for Thirteen Flowers (immediate, on 13th flower declaration)
       ]
     },
     "visayan" => %{
+          # TODOS:
+          # * check how "All Revealed" works
+          # * check how "Back To Back", "Single", and "Paningit" yaku work, then implement
+          # * implement NEWS and Beauty calls
+          # * check and implement other instant payouts
+          # * check and implement yaku precedence
+          # * implement mods
+          # * check whether `yaku/honitsu.majs` spawns a ghost "Honitsu" yaku worth 0 han
       display_name: "Visayan",
       tutorial_link: "https://mahjongpros.com/blogs/mahjong-rules-and-scoring-tables/official-filipino-visayan-mahjong-rules",
       ruleset: "visayan",
