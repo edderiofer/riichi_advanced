@@ -7,6 +7,7 @@ end
   # yaku (TODO: implement the rest)
 define_yaku yaku, "Base", 4, true
 define_yaku yaku, "All Revealed", 1, match(["hand"], [any:-2])
+define_yaku yaku, "No Flowers", 1, match(["flowers"], [any:-1])
 define_yaku yaku, "Quick Win", 1, counter_at_most(discard_count, 5) ### TODO ### (NOT CORRECT; Quick Win requires at most five discards *in the discard pool*)
 define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive, pair:7, koutsu:1])
 # define_yaku yaku, "Back to Back", 1, ### TODO ### (any shanpon wait)
@@ -15,8 +16,7 @@ define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive
 
   # instant payouts (TODO: implement these)
   # TODO: need to clarify who these payments come from (is it everyone for daiminkan/kakan, or just the discarder?)
-# 25¢ for No Flowers At Draw (immediate on initial flower-declaration phase)
-# 25¢ for No Flowers At Win (only if that player wins; need to clarify whether this is an instant payout or if it's actually a yaku)
+# 25¢ for No Flowers (immediate on initial flower-declaration phase, distinct from the "No Flowers" yaku above)
 # 25¢ for daiminkan
 # 50¢ for ankan
 # 50¢ for kakan
