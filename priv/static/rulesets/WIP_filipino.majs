@@ -6,25 +6,25 @@ end
 
   # yaku (TODO: implement the rest)
 define_yaku yaku, "Base", 4, true
-define_yaku yaku, "All Revealed", 1, match(["hand"], [any:-2]) and won_by_discard
-define_yaku yaku, "Quick Win", 1, counter_at_most(discard_count, 5) # check whether this is correct
+define_yaku yaku, "All Revealed", 1, match(["hand"], [any:-2])
+define_yaku yaku, "Quick Win", 1, counter_at_most(discard_count, 5) ### TODO ### (NOT CORRECT; Quick Win requires at most five discards *in the discard pool*)
 define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive, pair:7, koutsu:1])
-# define_yaku yaku, "Back to Back", 1, ### TODO ### (basically, if the player has a shanpon wait. clarify if an 8-sided pon wait, for Seven Pairs, is valid.)
-# define_yaku yaku, "Single", 1, ### TODO ### (clarify)
-# define_yaku yaku, "Paníngit", 1, ### TODO ### (clarify)
+# define_yaku yaku, "Back to Back", 1, ### TODO ### (any shanpon wait)
+# define_yaku yaku, "Single", 1, ### TODO ### (any wait on only one single tile, including fifth copies. nobetan 1234 does not count.)
+# define_yaku yaku, "Paníngit", 1, ### TODO ### (any wait that is ONLY interpretable as a kanchan on a single tile. 12234, 2334 do not count because they can be penchan/tanki resp. Also, Paníngit headbumps Single, but headbump works as usual otherwise.)
 
   # instant payouts (TODO: implement these)
   # TODO: need to clarify who these payments come from (is it everyone for daiminkan/kakan, or just the discarder?)
-# 25¢ for No Flowers (immediate on initial flower-declaration phase, and again on winning (need to clarify if this is also paid out if someone else wins))
+# 25¢ for No Flowers At Draw (immediate on initial flower-declaration phase)
+# 25¢ for No Flowers At Win (only if that player wins; need to clarify whether this is an instant payout or if it's actually a yaku)
 # 25¢ for daiminkan
 # 50¢ for ankan
 # 50¢ for kakan
 
   # yaku precedence (TODO: implement for Filipino)
   # also TODO: implement the yaku themselves
-# define_yaku_precedence "Seven Pairs", ["Back to Back", "Single"] (check whether this is the case)
-# define_yaku_precedence "Concealed Hand", ["All Revealed"] (check whether this is the case)
-# define_yaku_precedence "All Revealed", ["Single"] (check whether this is the case)
+define_yaku_precedence "Seven Pairs", ["Back to Back", "Single"]
+define_yaku_precedence "All Revealed", ["Single"]
 
 # score calculation
 set score_calculation, %{
