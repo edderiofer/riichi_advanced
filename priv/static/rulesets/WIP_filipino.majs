@@ -4,15 +4,62 @@ on after_turn_change do
   end
 end
 
+on before_win do
+  add_attr(["winning_tile"], ["_winning_tile"])
+end
+
+# define_const winning_groups_fu, [
+    # shanpon
+  # %{groups: ~s"0@tanyao 0@tanyao 0@winning_tile&ron", value: 2},
+  # %{groups: ~s"0@yaochuu 0@yaochuu 0@winning_tile&ron", value: 4},
+  # %{groups: ~s"0@tanyao 0@tanyao 0@winning_tile&tsumo", value: 4},
+  # %{groups: ~s"0@yaochuu 0@yaochuu 0@winning_tile&tsumo", value: 8},
+    # kanchan
+  # %{groups: ~s"-1 0@winning_tile 1", value: 2},
+    # penchan
+  # %{groups: ~s"0@winning_tile -1@tanyao -2@terminal", value: 2},
+  # %{groups: ~s"0@winning_tile 1@tanyao 2@terminal", value: 2},
+    # ryanmen
+  # %{groups: ~s"0@winning_tile -1@tanyao -2@tanyao"},
+  # %{groups: ~s"0@winning_tile 1@tanyao 2@tanyao"},
+    # tanki
+  # %{groups: ~s"0@not_yakuhai 0@winning_tile", value: 2},
+  # %{groups: ~s"0@prevalent 0@winning_tile | 0@seat 0@winning_tile | 5z 5z@winning_tile | 6z 6z@winning_tile | 7z 7z@winning_tile", value: 4}
+# ]
+
   # yaku (TODO: implement the rest)
 define_yaku yaku, "Base", 4, true
-define_yaku yaku, "All Revealed", 1, match(["hand"], [any:-2])
-define_yaku yaku, "No Flowers", 1, match(["flowers"], [any:-1])
-define_yaku yaku, "Quick Win", 1, counter_at_most(discard_count, 5) ### TODO ### (NOT CORRECT; Quick Win requires at most five discards *in the discard pool*)
-define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive, pair:7, koutsu:1])
-# define_yaku yaku, "Back to Back", 1, ### TODO ### (any shanpon wait)
-# define_yaku yaku, "Single", 1, ### TODO ### (any wait on only one single tile, including fifth copies. nobetan 1234 does not count.)
-# define_yaku yaku, "Paníngit", 1, ### TODO ### (any wait that is ONLY interpretable as a kanchan on a single tile. 12234, 2334 do not count because they can be penchan/tanki resp. Also, Paníngit headbumps Single, but headbump works as usual otherwise.)
+define_yaku yaku, "All Revealed", 1, match(["hand"], ~m"any:-2")
+define_yaku yaku, "No Flowers", 1, match(["flowers"], ~m"any:-1")
+define_yaku yaku, "Quick Win", 1, match(["all_ponds"], ~m"any:-6")
+define_yaku yaku, "Seven Pairs", 2, match(["hand", "calls", "winning_tile"], ~m"exhaustive, pair:7, koutsu:1")
+  ### TODO ### (check if this shanpon wait check works)
+define_yaku yaku, "Back to Back", 1, match(["hand", "calls", "winning_tile"], ~m"exhaustive, ~s"0 0 0@winning_tile":1, (shuntsu koutsu):4, pair:1 | exhaustive, ~s"0 0 0@winning_tile":1, pair:7")
+
+  ### TODO ### (check if this works (it doesn't))
+# define_yaku yaku, "Single", 1, match(["hand", "calls", "winning_tile"], ~m"
+  # exhaustive, ~s"0 0@winning_tile":1, (shuntsu koutsu):5
+  # | exhaustive, ~s"0 0@winning_tile":1, pair:6, koutsu:1
+  # | exhaustive, ~s"0 1@winning_tile 2":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"1m 2m 3m@winning_tile":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"1p 2p 3p@winning_tile":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"1s 2s 3s@winning_tile":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"7m@winning_tile 8m 9m":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"7p@winning_tile 8p 9p":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"7s@winning_tile 8s 9s":1, (shuntsu koutsu):4, pair:1
+  # ")
+  ### TODO ### (need to exclude waits that *aren't* on only one single tile, including fifth copies. nobetan 1234 does NOT count. check how this is handled in other variants e.g. MCR for inspiration.)
+
+  ### TODO ### (check if this works)
+# define_yaku yaku, "Paníngit", 1, match(["hand", "calls", "winning_tile"], ~m"exhaustive, ~s"0 1@winning_tile 2":1, (shuntsu koutsu):4, pair:1") and not match (["hand", "calls", "winning_tile"], ~m"
+  # exhaustive, ~s"0 0@winning_tile":1, (shuntsu koutsu):5
+  # | exhaustive, ~s"0 0@winning_tile":1, pair:6, koutsu:1
+  # | exhaustive, ~s"0 0 0@winning_tile":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"0 0 0@winning_tile":1, pair:7
+  # | exhaustive, ~s"0 1 2@winning_tile":1, (shuntsu koutsu):4, pair:1
+  # | exhaustive, ~s"0@winning_tile 1 2":1, (shuntsu koutsu):4, pair:1
+  # ")
+  ### TODO ### (Also, Paníngit headbumps Single, but headbump works as usual otherwise.)
 
   # instant payouts (TODO: implement these)
   # TODO: need to clarify who these payments come from (is it everyone for daiminkan/kakan, or just the discarder?)
@@ -21,8 +68,7 @@ define_yaku yaku, "Seven Pairs", 2, match(["hand", "draw", "calls"], [exhaustive
 # 50¢ for ankan
 # 50¢ for kakan
 
-  # yaku precedence (TODO: implement for Filipino)
-  # also TODO: implement the yaku themselves
+  # yaku precedence
 define_yaku_precedence "Seven Pairs", ["Back to Back", "Single"]
 define_yaku_precedence "All Revealed", ["Single"]
 
