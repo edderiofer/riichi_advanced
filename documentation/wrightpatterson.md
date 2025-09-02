@@ -16,7 +16,7 @@ Here are differences between Riichi Advanced and real life/other mahjong clients
 - Discards in Riichi Advanced are arranged in order in front of each player. (It's **Riichi** Advanced, so everything is a Riichi variant.)
 - Riichi Advanced will keep the Window of Opportunity for calling a discard open until each player who can call it decides whether to call it or pass.
 - When multiple players wish to blind-pass during the Charleston, the IOU protocol from [American Mah-Jongg (NMJL-style)](american.md) is used, starting with East.
-- There are [some] buttons in the bottom left of the interface, used for automatic actions. See the **Auto-buttons in Riichi Advanced** section for more. <<TODO: edit this section>>
+- There are [some] buttons in the bottom left of the interface, used for automatic actions. See the **Auto-buttons in Riichi Advanced** section for more. <<TODO: add this section after you've implemented this variant>>
 - Other differences listed in the "TODOS" section below:
 
 ---
@@ -65,7 +65,7 @@ To win, you must achieve one of the ninety-one hands listed in the official rule
 
 Chow may not be declared, except when going for a "Jewel Hand". <<TODO: check this>>
 
-Open Kongs are placed with three tiles face-down and one face-up. Concealed Kongs are initially placed with four tiles face-down; if that player has a Pung of a suited tile, two of the tiles of that Concealed Kong are turned face-up. <<TODO: check this>> Added Kongs are placed with all four tiles face-up.
+Open Kongs are placed with three tiles face-down and one face-up. Concealed Kongs are initially placed with four tiles face-down; if that player has a Pung of a suited tile, two of the tiles of that Concealed Kong are turned face-up. Added Kongs are placed with all four tiles face-up.
 
 Declaring a concealed Kong opens your hand. <<TODO: check this>>
 
