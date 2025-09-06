@@ -90,17 +90,16 @@
   },
   "win_definition": [
     // Pairs Hands
-      // Doublets: Seven pairs in one suit
-        // [ "exhaustive", [["pair"], 7], "restart", [] ],
-      // Snowflake: Six pairs of Dots, pair of White Dragons
-      // Valentine: ibid Cracks/Red
-      // Shamrock:  ibid Bams/Green
+      "11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a", // Doublets (Seven pairs in one suit)
+      "11p|22p|33p|44p|55p|66p|77p|88p|99p 11p|22p|33p|44p|55p|66p|77p|88p|99p 11p|22p|33p|44p|55p|66p|77p|88p|99p 11p|22p|33p|44p|55p|66p|77p|88p|99p 11p|22p|33p|44p|55p|66p|77p|88p|99p 11p|22p|33p|44p|55p|66p|77p|88p|99p 00", // Snowflake: Six pairs of Dots, pair of White Dragons
+      "11m|22m|33m|44m|55m|66m|77m|88m|99m 11m|22m|33m|44m|55m|66m|77m|88m|99m 11m|22m|33m|44m|55m|66m|77m|88m|99m 11m|22m|33m|44m|55m|66m|77m|88m|99m 11m|22m|33m|44m|55m|66m|77m|88m|99m 11m|22m|33m|44m|55m|66m|77m|88m|99m RR", // Valentine: ibid Cracks/Red
+      "11s|22s|33s|44s|55s|66s|77s|88s|99s 11s|22s|33s|44s|55s|66s|77s|88s|99s 11s|22s|33s|44s|55s|66s|77s|88s|99s 11s|22s|33s|44s|55s|66s|77s|88s|99s 11s|22s|33s|44s|55s|66s|77s|88s|99s 11s|22s|33s|44s|55s|66s|77s|88s|99s GG", // Shamrock:  ibid Bams/Green
       // Windy Pairs: ibid any suit/(seat/round wind)
-      // Razzle: Five pairs in one suit + NEWS
-      // Dazzle: Five pairs in one suit + RG0 + R/G/0
+      "11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a NEWS", // Razzle
+      "11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a RG0 D", // Dazzle
       "1133557799a NEWS", // Odd Pairs
       "22446688a RRGG00", // Even Pairs
-      // Betty: Three simples pairs in one suit + NEWSRG0 + N/E/W/S/R/G/0
+      "22a|33a|44a|55a|66a|77a|88a 22a|33a|44a|55a|66a|77a|88a 22a|33a|44a|55a|66a|77a|88a NEWSRG0 Z|D", // Betty
       // Eternal Triangle: Three simples pairs in three suits (all different numbers) + NEWSRG0 + N/E/W/S/R/G/0
     // Sequence Hands
       "123456789a NEWS N|E|W|S", // News Line-up
@@ -110,7 +109,7 @@
       // Pung Chow: menzen chinitsu tsumo
       // Harmony: "XXX0a XXX1a XXX2a DDDa + seat/round wind"
       "123456789a X0a ZZZZ|DDDD", // King Kong
-      // Hi-Jacks: suuankou tsumo
+      // Hi-Jacks: chinitsu suuankou tsumo
     // Novelty Hands
       // Roaring 20's: "222a 222b 222c 000 + round wind"
       "333a 333b 333c 22 EEE", // 2022 - Year of the Tiger!
@@ -122,54 +121,135 @@
       "111a 999a 000 345a WW", // First Flights
       "111a 999a ZZZ ZZZ ZZ", // Wright-Patt Wind Tunnel
       "1952a 1952b NEEWWS", // B-52 First Flight
+    // Jewel Hands
+      // Jade (Bamboos): ryuuiisou
+      // Ruby (Characters): ryuuiisou but in characters
+      // Pearl (Dots): ryuuiisou but in dots
+      // Emerald (Bamboos): ryuuiisou but it's 34579s
+      // Garnet (Characters): ryuuiisou but it's 34579m
+      // Opal (Dots): ryuuiisou but it's 34579p
+      // Gemstones: <<TODO: await clarification on this hand>>
+    // Gates Hands
+      "111a 999b 22446688c", // Helen Gates
+      // Cindy Gates: "111a|999a 22446688a + seat/round wind pair"
+      "111a|999a 22446688a DDDa", // Lucy Gates
+      "111a 999a 2345678a 2a|3a|4a|5a|6a|7a|8a", // Heavenly Gates
+      "111a|999a 2345678a 2a|3a|4a|5a|6a|7a|8a DDDa", // Dragon Gates
+      // Windy Gates: "111a 23456789a + seat/round wind pung" OR "999a 12345678a + seat/round wind pung"
+      "111a 999a 22446688a", True Gates
+    // Number Hands (NO TERMINALS)
+      // Eleanor: "XXX0a XXX'0b XXX''0c EEE RR"
+      // Susie Q: "XXX0a XXX'0b XXX''0c SSS GG"
+      // Wally: "XXX0a XXX'0b XXX''0c WWW 00"
+      // Neutrality: "XXX0a XXX'0b XXX''0c NNN 55s"
+      "777a 777b 777c NEWS Z", // Maggie's Orr-bit
+      "XXX0a XXX0b XXX0c ZZZ ZZ", "XXX0a XXX0b XXX0c DDD DD", // Tri-Numbers
+      // Double Numbers: "XXX0a XXX0b XXX'0a XXX'0b ZZ|DD"
+      // Asian Hash: "XXX0a XXX'0b XXX''0c ZZZ DD" OR "XXX0a XXX'0b XXX''0c DDD ZZ"
+      // Newsy Pungs: "XXX0a XXX'0b XXX''0c NEWS Z"
+    // Mixed Suits
+      "13579a 13579b 2468c", // Heavenly Hopscotch
+      "135a 1357b 13579c ZZ|DD", // Hopscotch
+      "2468a 2468b 13579c 1c|9c", // Scotch-hopper
+      "246a 468b 2468c ZZ|DD ZZ|DD", // Scotch-hopping
+      // Big 1-5-7-9 Hand: "1,5,777,9 and 1,555,7,9 in two suits with a pair of Own or Prevailing Wind. (pungs may be in any number, but must be different in each suit.)"
+      "111 555 777 999 11|99", // Little 1-5-7-9
+      // Big 2-4-6-8 Hand: "2,4,666,8 and 222,4,6,8 in two suits with a pair of Own or Prevailing Wind. (pungs may be in any number, but must be different in each suit.)"
+      "222 444 666 888 22|88", // Little 2-4-6-8 Hand
+      "123a 123b 123c 1a 2b 3c 44", // Little Chows
+      "123a 123b 123c NEWS Z", // Chop Suey
+      "456a 456b 456c 4a 5b 6c 33", // Middle Chows
+      "456a 456b 456c NEWS Z", // Sukiyaki
+      "789a 789b 789c 7a 8b 9c 66", // Big Chows
+      "789a 789b 789c NEWS Z", // Chow Mein
+      "1234567a 1234567b", "2345678a 2345678b", "3456789a 3456789b", // Gerties Garter
+      // Mish Mash: suuankou
+    // Hands of Honors
+      "11|99 11|99 11|99 11|99 11|99 NEWS", // Honorettes
+      "111|999|ZZZ|DDD 111|999|ZZZ|DDD 111|999|ZZZ|DDD 111|999|ZZZ|DDD 11|99|ZZ|DD", // Heavenly Hash
+      "11|99|ZZ 11|99|ZZ 11|99|ZZ 11|99|ZZ 11|99|ZZ RG0 D", // Winds and Terms
+      "11|99|DD 11|99|DD 11|99|DD 11|99|DD 11|99|DD NEWS", // Dragons and Terms
+      "19a 19b 19c ZZ|DD ZZ|DD ZZ|DD ZZ|DD", // Honorable Hash
+      "19a 19b 19c NN EE WW SS", // Newsy Terminals. <<NOTE: confirm whether this hand is redundant given that Honorable Hash exists.>>
+      "111|999 111|999 111|999 NEWS Z", // Terminews
+      "111|999 111|999 111|999 111|999 11|99", // Grand Terminals
+      "11|99 11|99 11|99 NEWSRG0 Z|D", // Terms of Honors
+      "RRR GGG 000 NEWS Z", // Dragon Snooze
+      "ZZZ|DDD ZZZ|DDD ZZZ|DDD ZZZ|DDD ZZ|DD", // Dragongale
+      "19a 19b 19c NEWSRG0 1|9|Z|D", // Angels
+      "11|99|ZZ|DD 11|99|ZZ|DD 11|99|ZZ|DD 11|99|ZZ|DD 11|99|ZZ|DD 11|99|ZZ|DD 11|99|ZZ|DD", // Heavenly Twins
+      "ZZ|DD ZZ|DD ZZ|DD ZZ|DD ZZ|DD ZZ|DD ZZ|DD", // Honorable Twins
+      // Dragonwyck: "DDD DDD DDD + seat/round wind pung + ZZ"
+      "RRR GGG 000 EEE 99p", // Emperor's Robes
+      "1111s ZZZ ZZZ ZZ ZZ", // Cranes in Flight
+      "111a 999a 111b 999b 11c|99c", // Ping Pong
+    // Chinese Tea Hands
+      "222s|444s|666s|888s 222s|444s|666s|888s 222s|444s|666s|888s GGG SS", // Lemon Grass (Bamboos)
+      "222m|444m|666m|888m 222m|444m|666m|888m 222m|444m|666m|888m RRR EE", // Hibiscus (Characters)
+      "222p|444p|666p|888p 222p|444p|666p|888p 222p|444p|666p|888p 000 WW", // Jasmine (Dots)
+      "333s|555s|777s|999s 333s|555s|777s|999s 333s|555s|777s|999s GGG SS", // Bamboo Blossom (Bamboos)
+      "333m|555m|777m|999m 333m|555m|777m|999m 333m|555m|777m|999m RRR EE", // Lotus (Characters)
+      "333p|555p|777p|999p 333p|555p|777p|999p 333p|555p|777p|999p 000 WW" // Pom Pom (Dots)
+  ],
+  "open_win_definition": [
+      
+      
 
   
   // REVIEW CODE FROM HERE ONWARDS
-  
-  "tenpai_definition": [
-    [ "exhaustive", [["pair"], 1], [["ryanmen/penchan", "kanchan", "pair"], 1], [["shuntsu", "koutsu"], 3] ],
-    [ "exhaustive", [["shuntsu", "koutsu"], 4] ],
-    [ "unique",
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 12],
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 1]
-    ]
+    // 2024
+    "222a 000 2222b 4444b",
+    "FFFF 2222a 0000 24b",
+    "FF 2024a 2222b 2222c", "FF 2024a 4444b 4444c",
+    // 2468
+    "222a 444a 6666a 8888a", "222a 444a 6666b 8888b",
+    "22a 444a 44b 666b 8888c",
+    "22a 44a 666a 888a DDDDa",
+    "FFFF 4444a 6666b 24c", "FFFF 6666a 8888b 48c",
+    "FF 2222a 44a 66a 8888a", "FF 2222a 44b 66b 8888a",
+    // Any Like Numbers
+    "FFFF XXX0a XXXX0b XXX0c",
+    "XX0a DDDa XX0b DDDb XXXX0c",
+    "FF XXXX0a NEWS XXXX0b",
+    // Lucky Sevens
+    "FF 1111a 6666a 7777a",
+    "FF 2222a 5555a 7777a",
+    "FF 3333a 4444a 7777a",
+    // Winds and Dragons
+    "NNNN EEE WWW SSSS", "NNN EEEE WWWW SSS",
+    "FFFF DDDa DDDDb DDDc",
+    "NNN SSS XXXX0a XXXX1b", "EEE WWW XXXX0a XXXX1b",
+    "FF NN EEE WWW SSSS",
+    "NNNN XX0a XX1a XX2a SSSS", "EEEE XX0a XX1a XX2a WWWW",
+    "FF DDDDa NEWS DDDDb",
+    // 369
+    "333a 666a 6666b 9999b", "333a 666a 6666b 9999c",
+    "FF 3a 66a 999a 333b 333c", "FF 3a 66a 999a 666b 666c", "FF 3a 66a 999a 999b 999c",
+    "FF 3333a 6666a 9999a", "FF 3333a 6666b 9999c",
+    "333a DDDDa 333b DDDDb", "666a DDDDa 666b DDDDb", "999a DDDDa 999b DDDDb",
+    "3333a 66a 66b 66c 9999a",
+    "FFFF 33a 66a 999a DDDb",
+    // Quints
+    "FF XXXXX0a XX1a XXXXX2a",
+    "XXXXX0a ZZZZ XXXXX1b|XXXXX2b|XXXXX3b|XXXXX4b|XXXXX5b|XXXXX6b|XXXXX7b|XXXXX8b",
+    "XX0a XXXXX1a XX0b XXXXX1b",
+    "FFFFF DDDDa XXXXX0b",
+    // Consecutive Run
+    "111a 22a 3333a 44a 555a", "555a 66a 7777a 88a 999a",
+    "XX0a XXX1a DDDDb XXX2a XX3a",
+    "FF XXXX0a XXXX1a XXXX2a", "FF XXXX0a XXXX1b XXXX2c",
+    "X0a XX1a XXXX2a X0b XX1b XXXX2b",
+    "XX0a XX1a XXX2a XXX3a DDDDa",
+    "FFFFF X0a X1a X2a XXX3b XXX3c",
+    "XXX0a XXX1a XXXX2a XXXX3a", "XXX0a XXX1a XXXX2b XXXX3b",
+    // 13579
+    "111a 33a 5555a 77a 999a", "111a 33a 5555b 77c 999c",
+    "111a 333a 3333b 5555b", "555a 777a 7777b 9999b",
+    "FF 11a 333a 5555a DDDa", "FF 55a 777a 9999a DDDa",
+    "11a 33a 55a 7777b 9999c",
+    "FFFF 3333a 5555b 15c", "FFFF 5555a 7777b 35c",
+    "11a 33a 333b 555b DDDDc", "55a 77a 777b 999b DDDDc"
   ],
-  "kokushi_tenpai_definition": [
-    [ "unique",
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 12],
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 1]
-    ]
-  ],
-  "kokushi_definition": [
-    [ "unique",
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 13],
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 1]
-    ]
-  ],
-  "sanankou_tsumo_definition": [
-    [ [["pon", "daiminkan", "kakan"], -1], [["koutsu"], 3], [["shuntsu", "koutsu"], 2], [["pair"], 1] ],
-    [ [["pon", "daiminkan", "kakan"], -2], [["koutsu"], 3], [["shuntsu", "koutsu"], 1], [["pair"], 1] ],
-    [ [["pon", "daiminkan", "kakan"], -3], [["koutsu"], 5], [["pair"], 1] ]
-  ],
-  "sanankou_ron_definition": [
-    [ "exhaustive", [["pon", "daiminkan", "kakan"], -1], [["koutsu"], 3], [[{"tile": "any", "attrs": ["winning_tile"]}], 0], [["shuntsu", "koutsu"], 2], [["pair"], 1] ],
-    [ "exhaustive", [["pon", "daiminkan", "kakan"], -2], [["koutsu"], 4], [[{"tile": "any", "attrs": ["winning_tile"]}], 0], [["shuntsu", "koutsu"], 1], [["pair"], 1] ],
-    [ "exhaustive", [["pon", "daiminkan", "kakan"], -3], [["koutsu"], 5], [[{"tile": "any", "attrs": ["winning_tile"]}], 0], [["pair"], 1] ]
-  ],
-  "suuankou_tsumo_definition": [
-    [ [["pon", "daiminkan", "kakan"], -1], [["koutsu"], 4], [["pair"], 1] ]
-  ],
-  "suuankou_ron_definition": [
-    [ "exhaustive", [["pon", "daiminkan", "kakan"], -1], [["koutsu"], 4], [[{"tile": "any", "attrs": ["winning_tile"]}], 0], [["pair"], 1] ]
-  ],
-  "all_flowers_definition": [[ "unique", [["1f","2f","3f","4f"], 4] ]],
-  "all_seasons_definition": [[ "unique", [["1g","2g","3g","4g"], 4] ]],
-  "7_flowers_definition": [[ "unique", [["1f","2f","3f","4f","1g","2g","3g","4g"], 7] ]],
-  "8_flowers_definition": [[ "unique", [["1f","2f","3f","4f","1g","2g","3g","4g"], 8] ]],
-  "little_three_dragons_definition": [[ "unique", [["haku", "hatsu", "chun"], 2], [["haku_pair", "hatsu_pair", "chun_pair"], 1] ]],
-  "big_three_dragons_definition": [[ "unique", [["haku", "hatsu", "chun"], 3] ]],
-  "little_four_winds_definition": [[ "unique", [["ton", "nan", "shaa", "pei"], 3], [["ton_pair", "nan_pair", "shaa_pair", "pei_pair"], 1] ]],
-  "big_four_winds_definition": [[ "unique", [["ton", "nan", "shaa", "pei"], 4] ]],
   "yaku": [
     { "display_name": "Pure Straight", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [["exhaustive", [["ittsu"], 1], [["shuntsu", "koutsu"], 1], [["pair"], 1] ]]]}] },
     { "display_name": "All Triplets", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[[["koutsu"], 4], [["pair"], 1]]]]}] },
