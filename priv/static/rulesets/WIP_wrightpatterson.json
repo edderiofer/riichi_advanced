@@ -84,11 +84,46 @@
     "junchan_pair_5": [["9p","9p"]],
     "junchan_pair_6": [["9s","9s"]],
     "orphans_all": [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"]],
+    "seven_odd_honors": [["1z","2z","3z","4z","0z","6z","7z"]],
+    "ittsuu": [[0,1,2,3,4,5,6,7,8]],
     "chuurenpoutou": [[0,0,0,1,2,3,4,5,6,7,8,8,8]]
   },
+  "win_definition": [
+    // Pairs Hands
+      // Doublets: Seven pairs in one suit
+        // [ "exhaustive", [["pair"], 7], "restart", [] ],
+      // Snowflake: Six pairs of Dots, pair of White Dragons
+      // Valentine: ibid Cracks/Red
+      // Shamrock:  ibid Bams/Green
+      // Windy Pairs: ibid any suit/(seat/round wind)
+      // Razzle: Five pairs in one suit + NEWS
+      // Dazzle: Five pairs in one suit + RG0 + R/G/0
+      "1133557799a NEWS", // Odd Pairs
+      "22446688a RRGG00", // Even Pairs
+      // Betty: Three simples pairs in one suit + NEWSRG0 + N/E/W/S/R/G/0
+      // Eternal Triangle: Three simples pairs in three suits (all different numbers) + NEWSRG0 + N/E/W/S/R/G/0
+    // Sequence Hands
+      "123456789a NEWS N|E|W|S", // News Line-up
+      "123456789a 2a|3a|4a|5a|6a|7a|8a RG0 D", // Dragon Line-up
+      "11233455677899a", // Odd Sequence
+      // Piano Keys: 123456789a + [two pairs + single] in same suit, distinct
+      // Pung Chow: menzen chinitsu tsumo
+      // Harmony: "XXX0a XXX1a XXX2a DDDa + seat/round wind"
+      "123456789a X0a ZZZZ|DDDD", // King Kong
+      // Hi-Jacks: suuankou tsumo
+    // Novelty Hands
+      // Roaring 20's: "222a 222b 222c 000 + round wind"
+      "333a 333b 333c 22 EEE", // 2022 - Year of the Tiger!
+      "333a 555a 777a DDDa Db Dc", // Chinese New Year
+      // Firecrackers: "XXX0a XXX'0b XXX''0c Da DDb DDc"
+      "888a 888b 888c NNN WW", // Typhoon
+      // Poppers: "XXX0a XXX'0a XXX''0a DDDa ZZ"
+      "44a 77a 44b 77b 44c 77c RR", // 4th of July
+      "111a 999a 000 345a WW", // First Flights
+      "111a 999a ZZZ ZZZ ZZ", // Wright-Patt Wind Tunnel
+      "1952a 1952b NEEWWS", // B-52 First Flight
 
-
-
+  
   // REVIEW CODE FROM HERE ONWARDS
   
   "tenpai_definition": [
@@ -106,13 +141,6 @@
     ]
   ],
   "kokushi_definition": [
-    [ "unique",
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 13],
-      [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 1]
-    ]
-  ],
-  "win_definition": [
-    [ "exhaustive", [["pair"], 1], [["shuntsu", "koutsu"], 4] ],
     [ "unique",
       [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 13],
       [["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"], 1]
