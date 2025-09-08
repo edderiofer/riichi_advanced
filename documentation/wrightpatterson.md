@@ -60,7 +60,7 @@ Blind Pass: When a player blind-passes some tiles, they pass fewer than three ti
 
 ## Gameplay
 
-To win, you must achieve one of the ninety-one hands listed in the official rulebook. About half of these hands do not fit the "four sets and a pair" paradigm.
+To win, you must achieve one of the ninety-two hands listed in the official rulebook. About half of these hands do not fit the "four sets and a pair" paradigm.
 
 Chow and Mixed Chow may be declared, but this prohibits the player from winning with any hand other than a "Jewel Hand". <<TODO: check this>>
 
