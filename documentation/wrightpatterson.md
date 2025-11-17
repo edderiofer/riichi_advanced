@@ -74,11 +74,11 @@ Upon drawing from the dead wall (also called the "Flower Wall"), the last tile o
 
 ## Game End
 
-If the round ends with nobody declaring Mah Jongg, each player puts 50 points into the Wall Pot. The Wall Pot carries over between rounds, and is collected by the next player who declares Mah Jongg.
-
 If a player declares Mah Jongg, they are paid the value of their hand by each player. Afterwards, the other three players each score their hand (see below), and each player pays each higher-scoring player the difference between their two hands' scores, up to the limit of 500 points. East always pays and receives double at the end of each round, and their limit is also doubled (to 1000 points).
 
 If East wins immediately after the Charleston, or any player wins off East's first discard, they are paid Triple Limit.
+
+If the round ends with nobody declaring Mah Jongg, each player puts 50 points into the Wall Pot. The Wall Pot carries over between rounds, and is collected by the next player who declares Mah Jongg. Hands are not scored.
 
 Dealership passes only if someone other than East wins.
 
