@@ -62,15 +62,17 @@ Blind Pass: When a player blind-passes some tiles, they pass fewer than three ti
 
 To win, you must achieve one of the ninety-two hands listed in the official rulebook. About half of these hands do not fit the "four sets and a pair" paradigm.
 
-Chow and Mixed Chow may be declared, but this prohibits the player from winning with any hand other than a "Jewel Hand". <<TODO: check this>>
+Chow and Mixed Chow may be declared, but this prohibits the player from winning with any hand other than a "Jewel Hand". (In particular, Mixed Chows may only be used in hand #36 "Gemstones".)
 
 Open Kongs are placed with three tiles face-down and one face-up. Concealed Kongs are initially placed with four tiles face-down; if that player has a Pung of a suited tile, two of the tiles of that Concealed Kong are turned face-up. Added Kongs are placed with all four tiles face-up. Unlike other variants, declaring a concealed Kong opens your hand.
 
 Robbing a Kong is allowed. However, the robbed player completes their Added Kong and must then discard a tile (which cannot be used by anyone).
 
-Competing calls on the same discarded tile are resolved by priority; Mah Jongg takes priority over Kong/Pung/Chow; ties are resolved by the player next in turn order.
+Competing calls on the same discarded tile are resolved by priority; Mah Jongg takes priority over Kong/Pung/Chow/Mixed Chow, the latter four of which have the same priority; ties are resolved by the player next in turn order.
 
-Upon drawing from the dead wall (also called the "Flower Wall"), the last tile of the live wall does not move into the dead wall. If the dead wall is ever empty, players continue drawing replacement tiles from the dead end of the live wall instead. The game ends on the discard after the last tile from the live wall is drawn, whether a player declares Mah Jongg off it or not. <<TODO: what happens if the last tile is a flower and the dead wall is empty?>>
+Upon drawing from the dead wall (also called the "Flower Wall"), the last tile of the live wall does not move into the dead wall. If the dead wall is ever empty, players continue drawing replacement tiles from the dead end of the live wall instead. The game ends when someone declares Mah Jongg, or after the last discard has been made and nobody wants it for any reason. In particular, players may still call for Mixed Chow/Chow/Pung/Kong on the last discard.
+
+(NOTE: There is no official rule for what should happen if the dead wall is empty and the last tile is a flower. For Riichi Advanced, the player must declare the flower, draw zero tiles, and then discard a tile.)
 
 ## Game End
 
@@ -123,7 +125,7 @@ Next, count the number of doubles (indented doubles do not stack):
    
 For the purposes of counting Three Concealed Pungs and Four Concealed Pungs, open Kongs count as Concealed Pungs.
    
-Doubling the points that many times, then rounding to the nearest 10, yields the score of that hand. (Note that East's double payment and double receipt, as well as limits, do not apply to the score of the hand, but to the payments, computed by the differences between scores.)
+Doubling the points that many times, then rounding up or down to the nearest 10, yields the score of that hand. (Note that East's double payment and double receipt, as well as limits, do not apply to the score of the hand, but to the payments, computed by the differences between scores.)
 
 ## Ending the game
 
