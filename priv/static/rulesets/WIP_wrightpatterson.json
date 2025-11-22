@@ -192,33 +192,27 @@
       "333p|555p|777p|999p 333p|555p|777p|999p 333p|555p|777p|999p 000 WW" // Pom Pom (Dots)
   ],
   "open_win_definition": [
-  // REVIEW CODE FROM HERE ONWARDS
   ],
   "yaku": [
-    { "display_name": "Pure Straight", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [["exhaustive", [["ittsu"], 1], [["shuntsu", "koutsu"], 1], [["pair"], 1] ]]]}] },
-    { "display_name": "All Triplets", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[[["koutsu"], 4], [["pair"], 1]]]]}] },
-    {
-      "display_name": "Three Concealed Triplets",
-      "value": 1,
-      "when": [[
-        ["won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["sanankou_tsumo"]]}],
-        ["not_won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["sanankou_ron"]]}]
-      ]]
-    },
+      // implement all the doubles in here?
+        // A: East pays and receives double. 
+    // implemented as dealer_multiplier
+        // B: Own Flower (each).
+    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["east"]}, {"name": "match", "opts": [["flowers"], [[[["1f"], 1]]]]}] },
+    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["south"]}, {"name": "match", "opts": [["flowers"], [[[["2f"], 1]]]]}] },
+    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["west"]}, {"name": "match", "opts": [["flowers"], [[[["3f"], 1]]]]}] },
+    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["north"]}, {"name": "match", "opts": [["flowers"], [[[["4f"], 1]]]]}] },
+    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["east"]}, {"name": "match", "opts": [["flowers"], [[[["1g"], 1]]]]}] },
+    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["south"]}, {"name": "match", "opts": [["flowers"], [[[["2g"], 1]]]]}] },
+    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["west"]}, {"name": "match", "opts": [["flowers"], [[[["3g"], 1]]]]}] },
+    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["north"]}, {"name": "match", "opts": [["flowers"], [[[["4g"], 1]]]]}] },
+        // B2: Prevailing Flower (each). <<NOTE: Prevalent Wind is defined by whose wall gets broken. Look at wareme rules to figure out how to implement that.>> 
+    // ???
+        // C: Pung or Kong of Dragons.
     { "display_name": "White Dragon", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[[["haku"], 1]]]]}] },
     { "display_name": "Green Dragon", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[[["hatsu"], 1]]]]}] },
     { "display_name": "Red Dragon", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[[["chun"], 1]]]]}] },
-    { "display_name": "Little Three Dragons", "value": 3, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], ["little_three_dragons"]]}] },
-    {
-      "display_name": "Prevalent Wind",
-      "value": 1,
-      "when": [[
-        [{"name": "round_wind_is", "opts": ["east"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["ton"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}],
-        [{"name": "round_wind_is", "opts": ["south"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["nan"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}],
-        [{"name": "round_wind_is", "opts": ["west"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["shaa"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}],
-        [{"name": "round_wind_is", "opts": ["north"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["pei"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}]
-      ]]
-    },
+        // D: Pung or Kong of Own Wind.
     {
       "display_name": "Seat Wind",
       "value": 1,
@@ -229,19 +223,18 @@
         [{"name": "seat_is", "opts": ["north"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["pei"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}]
       ]]
     },
-    { "display_name": "All Simples", "value": 1, "when": [{"name": "winning_hand_consists_of", "opts": ["2m","3m","4m","5m","6m","7m","8m","2p","3p","4p","5p","6p","7p","8p","2s","3s","4s","5s","6s","7s","8s"]}] },
-    {
-      "display_name": "Outside Hand",
-      "value": 1,
-      "when": [
-        {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[
-          "exhaustive",
-          [["junchan_1", "junchan_2", "junchan_3", "junchan_4", "junchan_5", "junchan_6", "junchan_7", "junchan_8", "junchan_9", "junchan_10", "junchan_11", "junchan_12", "ton", "nan", "shaa", "pei", "haku", "hatsu", "chun"], 4],
-          [["junchan_pair_1", "junchan_pair_2", "junchan_pair_3", "junchan_pair_4", "junchan_pair_5", "junchan_pair_6", "ton_pair", "nan_pair", "shaa_pair", "pei_pair", "haku_pair", "hatsu_pair", "chun_pair"], 1]
-        ]]]}
-      ]
-    },
-    { "display_name": "All Terminals and Honors", "value": 1, "when": [{"name": "winning_hand_consists_of", "opts": ["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"]}] },
+        // E: Pung or Kong of Prevalent Wind. <<NOTE: Prevalent Wind is defined by whose wall gets broken. Look at wareme rules to figure out how to implement that.>>
+    // {
+    //   "display_name": "Prevalent Wind",
+    //   "value": 1,
+    //   "when": [[
+    //     [{"name": "round_wind_is", "opts": ["east"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["ton"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}],
+    //     [{"name": "round_wind_is", "opts": ["south"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["nan"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}],
+    //     [{"name": "round_wind_is", "opts": ["west"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["shaa"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}],
+    //     [{"name": "round_wind_is", "opts": ["north"]}, {"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ [["pei"], 1], [["shuntsu", "koutsu"], 3], [["pair"], 1] ]]]}]
+    //   ]]
+    // },
+        // F: Cleared to one suit and Honors (hand must contain at least one simple):
     {
       "display_name": "Half Flush",
       "value": 1,
@@ -251,100 +244,104 @@
         {"name": "winning_hand_consists_of", "opts": ["1s","2s","3s","4s","5s","6s","7s","8s","9s","1z","2z","3z","4z","0z","6z","7z"]}
       ]]
     },
-    { "display_name": "Out on a Replacement", "value": 1, "when": [{"name": "not_status_missing", "opts": ["kan", "flower"]}] },
-    { "display_name": "Robbing the Kong", "value": 1, "when": ["won_by_call"] },
-    { "display_name": "Last Tile Draw", "value": 1, "when": ["won_by_draw", "no_tiles_remaining"] },
-    { "display_name": "Last Tile Discard", "value": 1, "when": ["not_won_by_draw", "no_tiles_remaining"] },
-    { "display_name": "Concealed Hand", "value": 1, "when": ["won_by_draw", {"name": "has_no_call_named", "opts": ["chii", "pon", "daiminkan", "kakan"]}] },
-    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["east"]}, {"name": "match", "opts": [["flowers"], [[[["1f"], 1]]]]}] },
-    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["south"]}, {"name": "match", "opts": [["flowers"], [[[["2f"], 1]]]]}] },
-    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["west"]}, {"name": "match", "opts": [["flowers"], [[[["3f"], 1]]]]}] },
-    { "display_name": "Seat Flower", "value": 1, "when": [{"name": "seat_is", "opts": ["north"]}, {"name": "match", "opts": [["flowers"], [[[["4f"], 1]]]]}] },
-    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["east"]}, {"name": "match", "opts": [["flowers"], [[[["1g"], 1]]]]}] },
-    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["south"]}, {"name": "match", "opts": [["flowers"], [[[["2g"], 1]]]]}] },
-    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["west"]}, {"name": "match", "opts": [["flowers"], [[[["3g"], 1]]]]}] },
-    { "display_name": "Seat Season", "value": 1, "when": [{"name": "seat_is", "opts": ["north"]}, {"name": "match", "opts": [["flowers"], [[[["4g"], 1]]]]}] },
+        // G: Three concealed Pungs
+    {
+      "display_name": "Three Concealed Triplets",
+      "value": 1,
+      "when": [[
+        ["won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["sanankou_tsumo"]]}],
+        ["not_won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["sanankou_ron"]]}]
+      ]]
+    },
+        // H: Cleared to Honors and Terminals
+    { "display_name": "All Terminals and Honors", "value": 1, "when": [{"name": "winning_hand_consists_of", "opts": ["1m","9m","1p","9p","1s","9s","1z","2z","3z","4z","0z","6z","7z"]}] },
+        // I: Ready to mah jongg on Limit Hand
+    // <<TODO: Implement this. Probably best to implement it as "Ready to Mah Jongg" and then lump all three of this, L, and Q together as a single yaku.>>
+        // J: Four concealed Pungs
+    {
+      "display_name": "Four Concealed Triplets",
+      "value": 2,
+      "when": [[
+        ["won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["suuankou_tsumo"]]}],
+        ["not_won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["suuankou_ron"]]}]
+      ]]
+    },
+        // K: Cleared to Honors and Terminals in one suit (cannot count with H)
+      // actually this one is redundant since it should score both F and H????
+        // L: Ready to mah jongg on Double Limit Hand
+    // ??????
+        // M: All One Suit
     {
       "display_name": "Full Flush",
-      "value": 4,
+      "value": 3,
       "when": [[
         {"name": "winning_hand_consists_of", "opts": ["1m","2m","3m","4m","5m","6m","7m","8m","9m"]},
         {"name": "winning_hand_consists_of", "opts": ["1p","2p","3p","4p","5p","6p","7p","8p","9p"]},
         {"name": "winning_hand_consists_of", "opts": ["1s","2s","3s","4s","5s","6s","7s","8s","9s"]}
       ]]
     },
-    { "display_name": "All Flowers", "value": 4, "when": [{"name": "match", "opts": [["flowers"], ["all_flowers"]]}] },
-    { "display_name": "All Seasons", "value": 4, "when": [{"name": "match", "opts": [["flowers"], ["all_seasons"]]}] }
+        // N: Two Puns and a pair of Dragons
+    { "display_name": "Little Three Dragons", "value": 3, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], ["little_three_dragons"]]}] },
+        // O: All Honors
+    { "display_name": "All Honors", "value": 3, "when": [{"name": "winning_hand_consists_of", "opts": ["1z","2z","3z","4z","0z","6z","7z"]}] },
+        // P: All Terminals
+    { "display_name": "All Terminals", "value": 3, "when": [{"name": "winning_hand_consists_of", "opts": ["1m","9m","1p","9p","1s","9s"]}] }
+        // Q: Ready to mah jongg on Triple Limit Hand
+    // ??????
+        // R: Big Three Dragons
+    { "display_name": "Big Three Dragons", "value": 4, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], ["big_three_dragons"]]}] }
   ],
   "yakuman": [
-    // limit hands
-    { "display_name": "Blessing of Heaven", "value": 1, "when": [{"name": "status", "opts": ["first_turn"]}, "won_by_draw", {"name": "seat_is", "opts": ["east"]}] },
-    { "display_name": "Blessing of Earth", "value": 1, "when": [{"name": "status", "opts": ["first_turn"]}, "won_by_draw", {"name": "not_seat_is", "opts": ["east"]}] },
-    {
-      "display_name": "Four Concealed Pungs",
-      "value": 1,
-      "when": [[
-        ["won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["suuankou_tsumo"]]}],
-        ["not_won_by_draw", {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["suuankou_ron"]]}]
-      ]]
-    },
-    { "display_name": "Four Kongs", "value": 1, "when": [{"name": "match", "opts": [["calls"], [[[["daiminkan", "ankan", "kakan"], 4]]]]}] },
-    { "display_name": "All Terminals", "value": 1, "when": [{"name": "winning_hand_consists_of", "opts": ["1m","9m","1p","9p","1s","9s"]}] },
-    { "display_name": "All Honors", "value": 1, "when": [{"name": "winning_hand_consists_of", "opts": ["1z","2z","3z","4z","0z","6z","7z"]}] },
-    { "display_name": "Thirteen Orphans", "value": 1, "when": [{"name": "match", "opts": [["hand", "winning_tile"], [[[["orphans_all"], 1]]]]}] },
-    { "display_name": "Nine Gates", "value": 1, "when": [{"name": "match", "opts": [["hand", "winning_tile"], [[[["chuurenpoutou"], 1]]]]}] },
-    { "display_name": "Big Three Dragons", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], ["big_three_dragons"]]}] },
-    { "display_name": "Little Four Winds", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], ["little_four_winds"]]}] },
-    { "display_name": "Big Four Winds", "value": 1, "when": [{"name": "match", "opts": [["hand", "calls", "winning_tile"], ["big_four_winds"]]}] },
-    { "display_name": "Plucking the Moon from the Bottom of the Sea", "value": 1, "when": ["no_tiles_remaining", "won_by_draw", {"name": "match", "opts": [["winning_tile"], [[[["1p"], 1]]]]}] },
-    { "display_name": "Gathering the Plum Blossom from the Roof", "value": 1, "when": [{"name": "status", "opts": ["kan"]}, {"name": "match", "opts": [["winning_tile"], [[[["5p"], 1]]]]}] },
-    { "display_name": "Scratching a Carrying-Pole", "value": 1, "when": ["won_by_call", {"name": "match", "opts": [["winning_tile"], [[[["2s"], 1]]]]}] },
-    { "display_name": "Two-Fold Fortune", "value": 1, "when": [{"name": "status", "opts": ["double_kan"]}] },
-    { "display_name": "Dealer's 13 Consecutive Win", "value": 1, "when": [{"name": "seat_is", "opts": ["east"]}, {"name": "counter_at_least", "opts": ["dealer_repeats", 12]}] }
+  // <<TODO: implement all the yaku above>>
+    // all hands in Wright-Patterson are yakuman-level, so it makes sense to implement this bit here. hands should be listed by how many limits they score
+    // { "display_name": "Doublets", "value": 1, "when": [] }, // "11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a 11a|22a|33a|44a|55a|66a|77a|88a|99a", single concealed
   ],
   "yaku_precedence": {
-    "All Flowers": ["Seat Flower"],
-    "All Seasons": ["Seat Season"],
-    "Seven Flowers": ["All Flowers", "All Seasons"],
-    "Eight Flowers": ["Seven Flowers"],
-    "After Multiple Kongs": ["After a Kong"],
     "Full Flush": ["Half Flush"],
-    "Big Four Winds": ["Small Four Winds"],
     "Big Three Dragons": ["Small Three Dragons"],
-    "Blessing of Earth": ["Blessing of Man"],
-    "Four Concealed Triplets": ["All Triplets"],
-    "All Honours": ["Round Wind", "Seat Wind", "All Triplets", "Half Flush", "Mixed Terminals"]
+    "Four Concealed Triplets": ["Three Concealed Triplets"],
+    "All Honors": ["Half Flush", "All Terminals and Honors"],
+    "All Terminals": ["All Terminals and Honors"]
   },
   "score_calculation": {
-    "scoring_method": ["han_fu_formula", "multiplier"],
+    "scoring_method": ["han_fu_formula", "multiplier"], // check that this is correct
+    "han_fu_rounding_factor": 2,
     "score_multiplier": 500, // this is for yakuman
-    "han_fu_starting_han": 0,
-    "han_fu_multiplier": 1,
-    "han_fu_rounding_factor": 1,
+    "highest_scoring_yaku_only": true,
     "dealer_multiplier": 2,
     "self_draw_multiplier": 1,
-    "dealer_self_draw_multiplier": 2,
-    "max_score": 500,
+    "max_score": 500, // hopefully this means that if you lose, your max score is capped at 500. but does dealer_multiplier affect this? worried that i might have to actually write the custom scoring code here
     "yaku_lists": ["yaku"],
     "yaku2_lists": ["yakuman"],
     "yaku2_overrides_yaku1": true,
     "agarirenchan": true,
     "right_display": "minipoints",
     "point_name": "Doubles",
-    "point2_name": "Limit",
+    "point2_name": "x Limit",
     "minipoint_name": "Pts",
+      // current progress
     "win_by_discard_label": "Hu",
     "win_by_draw_label": "Zimo",
     "win_by_discard_name": "Hu",
-    "win_by_discard_name_2": "Double Hu",
-    "win_by_discard_name_3": "Triple Hu",
     "win_by_draw_name": "Zimo",
-    "exhaustive_draw_name": "Draw"
+    "exhaustive_draw_name": "Wall Game"
   },
   "play_restrictions": [
     [["flower"], []]
   ],
   "functions": {
+    "blind_pass_left": [
+      ["as", ["east", "north", "west", "south"], [
+        ["when", [{"name": "counter_at_least", "opts": ["to_pass", 1]}], [["set_status", "pass_1"]]],
+        ["when", [{"name": "counter_at_least", "opts": ["to_pass", 2]}], [["set_status", "pass_2"]]],
+        ["when", [{"name": "counter_at_least", "opts": ["to_pass", 3]}], [["set_status", "pass_3"]]],
+        ["subtract_counter", "to_pass", "count_draws", "self"],
+        ["when", [{"name": "status", "opts": ["pass_1"]}], [["pass_draws", "kamicha", 1]]],
+        ["when", [{"name": "status", "opts": ["pass_2"]}], [["pass_draws", "kamicha", 1]]],
+        ["when", [{"name": "status", "opts": ["pass_3"]}], [["pass_draws", "kamicha", 1]]],
+        ["unset_status", "pass_1", "pass_2", "pass_3"]
+      ]]
+    ],
     "calculate_points": [
       ["set_counter", "fu", "minipoints",
         ["remove_attrs"],
@@ -353,42 +350,19 @@
         ["remove_calls", "tanyaohai"],
         ["convert_calls", {"pon": 2, "ankan": 16, "daiminkan": 8, "kakan": 8, "flower": 2}],
         ["remove_calls"],
-        // now remove the winning group
-        ["remove_winning_groups",
-          // kanchan
-          {"group": [-1, 1], "value": 2},
-          // penchan
-          {"group": [-1, -2], "reject_if_exists": [[-3]], "value": 2},
-          {"group": [1, 2], "reject_if_exists": [[3]], "value": 2},
-          // ryanmen
-          {"group": [-1, -2], "reject_if_missing": [[-3]]},
-          {"group": [1, 2], "reject_if_missing": [[3]]},
-          // shanpon
-          {"group": [0, 0], "value": 2, "yaochuuhai_mult": 2, "tsumo_mult": 2},
-          // tanki
-          {"group": [0], "value": 2, "yakuhai_value": 2}
-        ],
-        // now remove all closed groups
-        ["remove_groups", {"group": [0, 1, 2]}, {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
-        ["remove_groups", {"group": [0, 1, 2]}, {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
-        ["remove_groups", {"group": [0, 1, 2]}, {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
-        ["remove_groups", {"group": [0, 1, 2]}, {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
+        // now remove all concealed Pungs (undeclared Kong counts as a concealed Pung)
+        ["remove_groups", {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
+        ["remove_groups", {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
+        ["remove_groups", {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
+        ["remove_groups", {"group": [0, 0, 0], "value": 4, "yaochuuhai_mult": 2}],
         // remove final pair, if any
-        ["remove_groups", {"group": [0, 0], "yakuhai_value": 2}],
-        // only retain configurations with 0 tiles remaining
-        ["retain_empty_hands"],
-        // base 20
-        ["add", 20, []],
-        // tsumo +2
-        ["add", 2, ["won_by_draw"]],
-        // closed hand +10
-        ["add", 10, [{"name": "has_no_call_named", "opts": ["chii", "pon", "daiminkan", "kakan"]}]]
+        ["remove_groups", {"group": [0, 0], "yakuhai_value": 2}]
       ]
     ]
   },
   "before_turn_change": {
     "actions": [
-      ["unset_status", "flower", "kan", "double_kan"],
+      ["unset_status", "flower", "kan"],
       ["when", [{"name": "status_missing", "opts": ["match_start"]}], [["unset_status", "first_turn"]]]
     ]
   },
@@ -397,6 +371,27 @@
       ["when", ["no_tiles_remaining"], [["pause", 1000], ["ryuukyoku"]]],
       ["when", [{"name": "status_missing", "opts": ["match_start"]}, "not_no_tiles_remaining"], [["draw"]]],
       ["when", [{"name": "everyone_status", "opts": ["no_flowers"]}], [["unset_status_all", "no_flowers", "match_start"], ["change_turn", "east"]]]
+    ]
+  },
+  "after_charleston": {
+    "actions": [
+      ["when", [{"name": "status", "opts": ["blind_pass_left"]}], [
+        ["unset_status_all", "blind_pass_left"],
+        ["as", "everyone", [["delete_tiles", {"hand": ["1x"], "draw": ["1x"]}]]],
+        ["as", "everyone", [
+          ["set_counter", "to_pass", 3],
+          ["subtract_counter", "to_pass", "count_draws", "kamicha"]
+        ]],
+        ["run", "blind_pass_left"],
+        ["run", "blind_pass_left"],
+        ["run", "blind_pass_left"],
+        ["run", "blind_pass_left"]
+      ]],
+      ["when", [{"name": "anyone_status", "opts": ["start_blind_pass", "charleston_left"]}], [
+        ["unset_status_all", "start_blind_pass"],
+        ["push_system_message", "Select any number of the upside-down tiles to blind-pass that many tiles"],
+        ["set_status_all", "blind_pass_left"]
+      ]]
     ]
   },
   "after_call": {
@@ -409,7 +404,12 @@
     "actions": [["set_counter", "dealer_repeats", "honba"], ["run", "calculate_points"]]
   },
   "after_start": {
-    "actions": [["set_status_all", "first_turn", "match_start"]]
+    "actions": [["set_status_all", "first_turn", "match_start"], // <<TODO: set prevailing wind here>>
+    ["when", [{"name": "dice_equals", "opts": [5, 9]}], [["as", "east", [["set_status", "wareme"]]]]],
+    ["when", [{"name": "dice_equals", "opts": [2, 6, 10]}], [["as", "south", [["set_status", "wareme"]]]]],
+    ["when", [{"name": "dice_equals", "opts": [3, 7, 11]}], [["as", "west", [["set_status", "wareme"]]]]],
+    ["when", [{"name": "dice_equals", "opts": [4, 8, 12]}], [["as", "north", [["set_status", "wareme"]]]]]
+    ]
   },
   "buttons": {
     "start_flower": {
@@ -424,30 +424,69 @@
       "actions": [["big_text", "No flowers"], ["set_status", "no_flowers"], ["advance_turn"], ["recalculate_buttons"]],
       "unskippable": true
     },
+    "charleston_left": {
+      "display_name": "Select three tiles to pass left",
+      "show_when": [{"name": "status", "opts": ["charleston_left"]}],
+      "actions": [
+        ["mark", [["hand", 3, ["self", "not_joker"]]], [["unset_status", "charleston_left"], ["merge_draw"], ["sort_hand"], ["when", [{"name": "status", "opts": ["blind_pass_left"]}], [["draw", 3, "1x"]]]]],
+        ["charleston_left"],
+        ["unset_status", "first_charleston"]
+      ],
+      "unskippable": true,
+      "cancellable": false
+    },
+    "charleston_across": {
+      "display_name": "Select three tiles to pass across",
+      "show_when": [{"name": "status", "opts": ["charleston_across"]}],
+      "actions": [
+        ["mark", [["hand", 3, ["self", "not_joker"]]], [["unset_status", "charleston_across"], ["merge_draw"], ["sort_hand"]]],
+        ["charleston_across"],
+        ["set_status", "charleston_left", "start_blind_pass"]
+      ],
+      "unskippable": true,
+      "cancellable": false
+    },
+    "charleston_right": {
+      "display_name": "Select three tiles to pass right",
+      "show_when": [{"name": "status", "opts": ["charleston_right"]}],
+      "actions": [
+        ["mark", [["hand", 3, ["self", "not_joker"]]], [["unset_status", "charleston_right"], ["merge_draw"], ["sort_hand"]]],
+        ["charleston_right"],
+        ["set_status", "charleston_across"]
+      ],
+      "unskippable": true,
+      "cancellable": false
+    },
+    "mixed-chow": {
+      "display_name": "Mixed Chow",
+      "call": [[11, 22], [12, 21]], // <TODO: check that this is correct>>
+      "call_conditions": [
+        {"name": "not_match", "opts": [["called_tile"], [[[["1z","2z","3z","4z","5z","6z","7z"], 1]]]]}
+      ],
+      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "kamicha_discarded", "call_available"],
+      "actions": [["big_text", "Mixed Chow"], ["call"], ["change_turn", "self"]]
+    },
     "chii": {
       "display_name": "Chow",
       "call": [[-2, -1], [-1, 1], [1, 2]],
-      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "not_no_tiles_remaining", "kamicha_discarded", "call_available"],
+      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "kamicha_discarded", "call_available"],
       "actions": [["big_text", "Chow"], ["call"], ["change_turn", "self"]]
     },
     "pon": {
       "display_name": "Pung",
       "call": [[0, 0]],
-      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "not_no_tiles_remaining", "someone_else_just_discarded", "call_available"],
-      "actions": [["big_text", "Pung"], ["call"], ["change_turn", "self"]],
-      "precedence_over": ["chii"]
+      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "someone_else_just_discarded", "call_available"],
+      "actions": [["big_text", "Pung"], ["call"], ["change_turn", "self"]]
     },
     "daiminkan": {
       "display_name": "Kong",
       "call": [[0, 0, 0]],
-      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "not_no_tiles_remaining", "someone_else_just_discarded", "call_available"],
+      "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "not_our_turn", "someone_else_just_discarded", "call_available"],
       "actions": [
         ["big_text", "Kong"], ["call"], ["change_turn", "self"],
-        ["when", [{"name": "status", "opts": ["kan"]}], [["set_status", "double_kan"]]],
         ["set_status", "kan"],
         ["draw", 1, "opposite_end"]
-      ],
-      "precedence_over": ["chii", "pon"]
+      ]
     },
     "ankan": {
       "display_name": "Self Kong",
@@ -455,7 +494,6 @@
       "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "our_turn", "not_no_tiles_remaining", "has_draw", "self_call_available", {"name": "status_missing", "opts": ["just_reached"]}],
       "actions": [
         ["big_text", "Kong"], ["self_call"],
-        ["when", [{"name": "status", "opts": ["kan"]}], [["set_status", "double_kan"]]],
         ["set_status", "kan"],
         ["draw", 1, "opposite_end"]
       ]
@@ -467,7 +505,6 @@
       "show_when": [{"name": "status_missing", "opts": ["match_start"]}, "our_turn", "not_no_tiles_remaining", "has_draw", "can_upgrade_call", {"name": "status_missing", "opts": ["just_reached"]}],
       "actions": [
         ["big_text", "Kong"], ["upgrade_call"],
-        ["when", [{"name": "status", "opts": ["kan"]}], [["set_status", "double_kan"]]],
         ["set_status", "kan"],
         ["draw", 1, "opposite_end"]
       ]
@@ -501,7 +538,7 @@
         ]
       ],
       "actions": [["big_text", "Hu"], ["pause", 1000], ["reveal_hand"], ["win_by_call"]],
-      "precedence_over": ["chii", "pon", "daiminkan", "chankan"]
+      "precedence_over": ["mixed-chow", "chii", "pon", "daiminkan", "chankan"]
     },
     "tsumo": {
       "display_name": "Zimo",
@@ -571,7 +608,7 @@
     }
   },
   "interruptible_actions": ["play_tile", "draw", "call", "self_call", "upgrade_call"],
-  "initial_score": 0,
+  "initial_score": 10000,
   "starting_tiles": 13,
   "max_rounds": 16
 }
