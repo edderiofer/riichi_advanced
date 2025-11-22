@@ -114,8 +114,7 @@ Next, count the number of doubles (indented doubles do not stack):
 * Half-Flush: 1 double
   - Full Flush: 3 doubles
 * Terminals and Honours: 1 double
-  - Half-Flush Terminals and Honours: 2 doubles
-    - All Honors: 3 doubles (does not stack with Half-Flush)
+  - All Honors: 3 doubles (does not stack with Half-Flush)
   - All Terminals: 3 doubles
 * Three Concealed Pungs: 1 double
 * Four Concealed Pungs: 2 doubles
