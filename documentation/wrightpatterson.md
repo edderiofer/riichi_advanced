@@ -117,7 +117,7 @@ Next, count the number of doubles (indented doubles do not stack):
   - All Honors: 3 doubles (does not stack with Half-Flush)
   - All Terminals: 3 doubles
 * Three Concealed Pungs: 1 double
-* Four Concealed Pungs: 2 doubles
+  - Four Concealed Pungs: 2 doubles
 * Ready on Limit Hand: 1 double
   - Ready on Double Limit Hand: 2 doubles
     - Ready on Triple Limit Hand: 3 doubles
