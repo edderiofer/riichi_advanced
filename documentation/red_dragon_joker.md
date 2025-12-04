@@ -17,6 +17,9 @@ Red Dragon tiles are treated as unlimited jokers instead of red dragons. They ca
 
 Base: 1 point
 Flower tiles: 1 point each
+Flies:
+  - Flip over the last 2 to 5 tiles of the wall (exact number to be agreed-upon by players at the start of the game). Every 1, 5, or 9 tile revealed is worth 1 point; every red dragon is worth two points.
+  - Flip over twice as many tiles if the winning hand contained no red dragons.
 
 Doubles:
   - Four Jokers: 1 double (does not stack with anything else)
@@ -34,8 +37,14 @@ Instant payment on Kongs:
   - Added Kong: Everyone pays 1 point.
   - Closed Kong: Everyone pays 2 points.
 
-Flying Flies:
-  - Flip over the last 2 to 5 tiles of the wall (exact number to be agreed-upon by players at the start of the game). Every 1, 5, or 9 tile revealed is worth 1 point; every red dragon is worth two points. <<TODO: check whether these are *points* or *doubles*.>>
-  - Flip over twice as many tiles if the winning hand contained no red dragons.
-
 Dealership passes to the winner of the round, or remains with the dealer on a draw.
+
+---
+## Optional rules:
+
+- Red Flies Doubled: When revealing tiles for Flies, red dragons count double. (On by default.)
+- Shark (有鯊): When revealing tiles for Flies, if you reveal no 1s, 5s, 9s, or reds, then every tile flipped over is worth 1 point.
+- With Honours (有番子): Winds and other dragons are added in and function as normal. <<TODO: research this>>
+
+---
+
