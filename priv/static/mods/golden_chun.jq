@@ -20,12 +20,12 @@
 # support for star suit mod
 if any(.wall[]; . == "1t") then
   .after_start.actions += [
-      # we can use the "_original" attribute to keep track of when the golden chun is used as a chun
-    ["set_tile_alias_all", ["37z"], ["5m", "5p", "5s", "5t", ["7z", "_original"]]]
+      # we can use the "_golden" attribute to keep track of when the golden chun is used as a five
+    ["set_tile_alias_all", ["37z"], [["5m", "_golden"], ["5p", "_golden"], ["5s", "_golden"], ["5t", "_golden"], "7z"]]
   ]
 else
   .after_start.actions += [
-    ["set_tile_alias_all", ["37z"], ["5m", "5p", "5s", ["7z", "_original"]]]
+    ["set_tile_alias_all", ["37z"], [["5m", "_golden"], ["5p", "_golden"], ["5s", "_golden"], "7z"]]
   ]
 end
 # add golden chun definition for when it's used as a five
@@ -42,27 +42,37 @@ end
 # add aka and golden chun yaku
 .extra_yaku += [
   {"display_name": "Kin", "value": 1, "when": [
-    {"name": "status", "opts": ["golden_chun"]},
-    [
-        # hold on, is this code OR-ing all of these conditions together? meaning that the Kin status is given if the player either has golden chun without 
-      {"name": "status_missing", "opts": ["7z"]},
-      [
-        {"name": "status", "opts": ["77z"]},
-        {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["golden_chun_77z_win"]]}
-      ],
-      [
-        {"name": "status", "opts": ["777z"]},
-        {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["golden_chun_777z_win"]]}
-      ]
+        # matches when the hand contains a tile with the "_golden" attribute. will have to see whether this code actually works though.
+      {"name": "match", "opts": [["hand", "calls", "draw"], [[[[["5m", "_golden"], ["5p", "_golden"], ["5s", "_golden"], ["5t", "_golden"]], 1]]]]}
     ]
-  ]}
+  }
 ]
+#.extra_yaku += [
+#  {"display_name": "Kin", "value": 1, "when": [
+#    {"name": "status", "opts": ["golden_chun"]},
+#    [
+#        # hold on, is this code OR-ing all of these conditions together? meaning that the Kin status is given if the player either has golden chun without 
+#      {"name": "status_missing", "opts": ["7z"]},
+#      [
+#        {"name": "status", "opts": ["77z"]},
+#        {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["golden_chun_77z_win"]]}
+#      ],
+#      [
+#        {"name": "status", "opts": ["777z"]},
+#        {"name": "match", "opts": [["hand", "calls", "winning_tile"], ["golden_chun_777z_win"]]}
+#      ]
+#    ]
+#  ]}
+#]
 |
 # count aka and add golden chun statuses
 .before_win.actions += [
+    # this line might have some kind of error that causes akahatsu to not always be added to the aka counter?
+    # got it. aka.majs sets the aka counter *after* this line is applied, overriding the aka gained from akahatsu. unsure how to fix.
   ["when", [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ "nojoker", [["06z"], 1] ]]]}], [["add_counter", "aka", 1]]],
     # the following line assigns the player the "golden_chun" status no matter how the golden chun is being used.
     # ideally, we want to assign the player a status if the golden chun is not being used as 7z. how do we check for this? maybe something in galaxy.jq can help?
+      # actually, this entire thing might need refactoring using tile attributes. consider that a TODO:
   ["when", [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ "nojoker", [["37z"], 1] ]]]}], [["set_status", "golden_chun"]]],
   ["when", [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ "nojoker", [["37z"], 1], [["7z"], 1] ]]]}], [["set_status", "7z"]]],
   ["when", [{"name": "match", "opts": [["hand", "calls", "winning_tile"], [[ "nojoker", [["37z"], 1], [["chun_pair"], 1] ]]]}], [["set_status", "77z"]]],
