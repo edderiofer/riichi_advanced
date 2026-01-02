@@ -2,6 +2,8 @@
 
 This ruleset assumes that you have read [base.md](base.md). Unlike the official rules as written by Frank "Choco" Munday, this rules doc uses the standard "civvy" names for things (in alignment with all the other mahjong variants we feature). A translation table between Civvy Names and Pussers Names is given at the end of this document.
 
+(If you are an active member of the Australian Navy, you may find that these rules are different from how you've been playing on Navy ships. We welcome all reports of incongruencies via the Issues page or the Discord.)
+
 ## TL;DR summary for Pussers Bones players:
 
 Here are differences between Riichi Advanced and real life/other mahjong clients:
@@ -14,7 +16,7 @@ Here are differences between Riichi Advanced and real life/other mahjong clients
 - Discards in Riichi Advanced are arranged in order in front of each player. (It's **Riichi** Advanced, so everything is a Riichi variant.)
 - Riichi Advanced will keep the Window of Opportunity for calling a discard open until each player who can call it decides whether to call it or pass.
 - Multiple players calling on the same tile are resolved by turn order from the discarder.
-- East (Eddie) doesn't get to pick where to break the wall; instead, the location of the break is determined by die roll as in Riichi. There is no penalty if East breaks into their own wall.
+- East (Eddie) doesn't get to pick where to break the wall; instead, the location of the break is determined by die roll as in Riichi. There is no penalty if East breaks into their own wall during the initial deal.
 - The game ends after two rounds (eight dealership passes).
 - Multiple claims on the same tile are resolved by turn order.
 - There are <<TODO: NUMBER>> buttons in the bottom left of the interface, used for automatic actions. See the **Auto-buttons in Riichi Advanced** section for more.
@@ -34,15 +36,15 @@ Here are differences between Riichi Advanced and real life/other mahjong clients
 The wall for Pussers Bones consists of the 1-9 character tiles, 1-9 circle tiles, 1-9 bamboo tiles, the four wind tiles, the three dragon tiles, the four flower tiles, and the four season tiles.
 
 To win, you must achieve one of the following:
-  - Four sets and a pair (as usual)
+  - Four sets and a pair (as usual) <<TODO: check if these must all be one suit plus honours>>
   - One of each terminal/honor tile, plus one extra (aka Thirteen Orphans, or "Moon")
   - 1~9 of a given suit, plus one of each wind, plus one extra wind (aka "Lizard"; if the extra wind is the player's seat wind, it's a "Big Lizard"; else it's a "Little Lizard").
 
-and your hand must ALSO score at least 50 points. (See the Scoring section below.) <<TODO: figure out what's going on with this condition, since it seems as if every hand should score at least 50 points?>>
+and your hand must ALSO score at least 50 points. (See the Scoring section below.)
 
-Note that sequences are not considered to be sets. <<TODO: Confirm this.>>
+Note that sequences are not considered to be sets.
 
-Concealed and Added Kongs must be declared immediately. <<TODO: Confirm whether Open Kongs must be declared.>>
+Declaring a Kong is mandatory, whether it is a Concealed, Added, or Open Kong.
 
 When calling a tile for an exposure, the call is "Yes!". When declaring a win, the call is "Do Bone!".
 
@@ -66,25 +68,25 @@ Points:
 For Pungs and Kongs, this point amount is halved if the Pung/Kong is open (formed via call).
 
 Doubles (indented doubles do not stack):
-- Winning: 1 double
-  - Full Flush: 3 doubles
-  - Concealed Hand: 3 doubles
 - Being East: 1 double
 - Triplet of dragons or seat wind: 1 double each
 - Seat flower/season: 1 double each
 - Winning by drawing the last tile or from a flower/kong replacement: 1 double
+- Full Flush: 3 doubles <<TODO: check whether there exists a Half Flush double.>>
+- Concealed Hand: 3 doubles
 
 Hands with fixed scores:
-- Moon (aka Thirteen Orphans): 50 a bit
-- 1s and 9s (aka All Terminals): 50 a bit
-- Winds and Dragons (aka All Honours): 50 a bit
-- Big Lizard: 30 a bit
-- Little Lizard: 20 a bit
+- Majors (aka All Terminals And Honours): 3000
+- 1s and 9s (aka All Terminals): 5000
+- Winds and Dragons (aka All Honours): 5000
+- Little Lizard: 2000
+- Big Lizard: 3000
+- Moon (aka Thirteen Orphans): 5000
 
 Bonus points:
-* One set of flowers: 20 a bit <<TODO: clarify what "a bit" means here, and when this is awarded>>
-* Two sets of flowers: 50 a bit
-* First Flower (after the initial deal): 10 a bit
+* One set of flowers: 2000 <<TODO: check when these are awarded>>
+* Two sets of flowers: 5000
+* First Flower (if there are no flowers on the initial deal): 1000 (awarded immediately)
 
 Double the number of points in the winning hand, as many times as the winning hand has doubles. Round to the nearest 100. Each other player pays the winner this amount. Each other player then pays additional bonus points to the winner.
 
@@ -92,12 +94,16 @@ Unlike Chinese Classical, non-winners' hands are not scored.
 
 ## Ending the game
 
+If the last tile of the wall is a flower, <<TODO: figure out how to resolve this>>
+
+If the game ends in a draw, nobody's hands are scored.
+
 Dealership passes if someone other than the dealer wins.
 
 On Riichi Advanced, the game ends after two rounds (eight dealership passes).
 
 ---
-## Pussers Names
+## (WIP) Pussers Names
 
 Civvy Name | Pussers Name
 ---|---
